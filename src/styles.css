@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    @apply max-h-screen min-h-screen min-w-full touch-none overflow-x-hidden bg-white;
+  }
+}
