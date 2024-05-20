@@ -2,9 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Opificio";
+  src: url("./assets/fonts/Opificio_rounded.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Opificio";
+  src: url("./assets/fonts/Opificio_Bold_rounded.ttf") format("truetype");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Opificio";
+  src: url("./assets/fonts/Opificio_light_rounded.ttf") format("truetype");
+  font-weight: lighter;
+  font-style: normal;
+}
+
 @layer base {
   html,
   body {
-    @apply max-h-screen min-h-screen min-w-full touch-none overflow-x-hidden bg-white;
+    @apply max-h-screen min-h-screen min-w-full touch-none overflow-hidden bg-white;
   }
+
+  * {
+    @apply text-black;
+  }
+}
+
+@keyframes scaleInFadeOut {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(5);
+    opacity: 0;
+  }
+}
+
+@keyframes rightToLeft {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(12px);
+  }
+  75% {
+    transform: translateX(-4px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@layer utilities {
+  .scale-in-fade-out {
+    animation: scaleInFadeOut 0.5s cubic-bezier(0, 0.55, 0.45, 1);
+  }
+
+  .stylized-shadow {
+    box-shadow: 0px 6px rgb(221 173 50);
+  }
+
+  .right-left {
+    animation: rightToLeft 0.4s;
+  }
+
+  /* .stylized-shadow:hover {
+    box-shadow: 0px 0px rgb(221 173 50);
+  } */
 }

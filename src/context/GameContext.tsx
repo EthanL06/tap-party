@@ -11,6 +11,10 @@ export const GameContext = createContext<GameContextType>({
   state: {
     clicks: {},
     playerIds: [],
+    clicksPercentage: {},
+    gameStart: 0,
+    timer: 0,
+    gameOver: false,
   },
   playerID: "",
 });
@@ -19,6 +23,10 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   const [game, setGame] = useState<GameState>({
     clicks: {},
     playerIds: [],
+    clicksPercentage: {},
+    gameStart: 0,
+    timer: 0,
+    gameOver: false,
   });
 
   const [playerID, setPlayerID] = useState<PlayerId>("");

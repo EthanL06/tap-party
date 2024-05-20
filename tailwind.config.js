@@ -9,6 +9,12 @@ export default {
     screens,
     fontSize,
     extend: {
+      fontFamily: {
+        sans: ["Opificio", "sans-serif"],
+      },
+      colors: {
+        black: "#070e14",
+      },
       fontSize: {},
     },
   },
