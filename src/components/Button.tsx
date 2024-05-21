@@ -1,18 +1,13 @@
 import { useState } from "react";
-import { MousePointerClick } from "lucide-react";
 import clickAudioSound from "../assets/click.mp3";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
 import useSound from "use-sound";
 import { cn } from "../lib/utils";
-
-const Button = ({
-  disabled,
-  className,
-}: {
-  disabled: boolean;
-  className?: string;
-}) => {
+import { useGameStore } from "../store/useGameStore";
+import tap from "../assets/tap.svg";
+const Button = ({ className }: { className?: string }) => {
+  const gameOver = useGameStore((state) => state.game.gameOver);
   const [play] = useSound(clickAudioSound);
   const [divs, setDivs] = useState<number[]>([]);
 
@@ -27,11 +22,11 @@ const Button = ({
 
   return (
     <button
-      disabled={disabled}
+      disabled={gameOver}
       onClick={handleClick}
       className={cn(
         "stylized-shadow focus:stylized-shadow group relative flex size-44 items-center justify-center rounded-full border-4 border-black bg-[#ffcb39] p-2 transition-all ",
-        !disabled && "active:translate-y-1 active:shadow-none",
+        !gameOver && "active:translate-y-1 active:scale-95 active:shadow-none",
         className,
       )}
     >
@@ -41,7 +36,13 @@ const Button = ({
           className="scale-in-fade-out absolute min-h-20 min-w-20 rounded-full border-2 border-black p-2"
         ></div>
       ))}
-      <MousePointerClick className="scale-[4] fill-black stroke-black  " />
+
+      <img
+        src={tap}
+        alt="tap"
+        className="relative size-24 translate-x-2 translate-y-2 -rotate-[3deg] fill-black stroke-black"
+      />
+      {/* <MousePointerClick className="scale-[4] fill-black stroke-black  " /> */}
     </button>
   );
 };
