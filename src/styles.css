@@ -4,21 +4,21 @@
 
 @font-face {
   font-family: "Opificio";
-  src: url("./assets/fonts/Opificio_rounded.ttf") format("truetype");
+  src: url("fonts/Opificio_rounded.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: "Opificio";
-  src: url("./assets/fonts/Opificio_Bold_rounded.ttf") format("truetype");
+  src: url("fonts/Opificio_Bold_rounded.ttf") format("truetype");
   font-weight: bold;
   font-style: normal;
 }
 
 @font-face {
   font-family: "Opificio";
-  src: url("./assets/fonts/Opificio_light_rounded.ttf") format("truetype");
+  src: url("fonts/Opificio_light_rounded.ttf") format("truetype");
   font-weight: lighter;
   font-style: normal;
 }
@@ -26,7 +26,7 @@
 @layer base {
   html,
   body {
-    @apply max-h-screen min-h-screen min-w-full touch-none overflow-hidden bg-white;
+    @apply max-h-screen min-h-screen min-w-full touch-none overflow-hidden bg-[#ffcb39];
   }
 
   * {
@@ -53,10 +53,74 @@
     transform: translateX(12px);
   }
   75% {
-    transform: translateX(-4px);
+    transform: translateX(-6px);
   }
   100% {
     transform: translateX(0);
+  }
+}
+
+@keyframes banner-animation {
+  0% {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes drop-in {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes drop-in-2 {
+  0% {
+    transform: translateY(-50%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes dropInFromBottom {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bigAndSmall {
+  0% {
+    transform: scale(3);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeAway {
+  0% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
   }
 }
 
@@ -73,7 +137,45 @@
     animation: rightToLeft 0.4s;
   }
 
-  /* .stylized-shadow:hover {
-    box-shadow: 0px 0px rgb(221 173 50);
-  } */
+  .banner-animation {
+    transform-origin: center;
+    animation: banner-animation 1s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  .drop-in {
+    animation: drop-in 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  }
+
+  .drop-in-2 {
+    animation: drop-in-2 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  }
+
+  .drop-in-from-bottom {
+    animation: dropInFromBottom 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  }
+
+  .animate-delay-500 {
+    animation-delay: 500ms;
+  }
+
+  .animate-delay-600 {
+    animation-delay: 600ms;
+  }
+
+  .animate-delay-1100 {
+    animation-delay: 1100ms;
+  }
+
+  .animate-delay-1600 {
+    animation-delay: 1600ms;
+  }
+
+  .big-and-small {
+    animation: bigAndSmall 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  .fade-away {
+    animation: fadeAway 0.65s ease-out;
+    animation-delay: 0.5s;
+  }
 }

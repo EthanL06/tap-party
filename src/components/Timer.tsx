@@ -1,13 +1,12 @@
 import { ClockIcon } from "lucide-react";
-import { useContext } from "react";
-import { GameContext } from "../context/GameContext";
+import { useGameStore } from "../store/useGameStore";
 
 const Timer = () => {
-  const { state } = useContext(GameContext);
-  const countdown = state.timer / 1000;
+  const timer = useGameStore((state) => state.game.timer);
+  const countdown = timer / 1000;
 
   return (
-    <div className="flex w-full items-center gap-x-1">
+    <div className="z-0 flex w-full items-center gap-x-0.5">
       <ClockIcon
         strokeWidth={2.5}
         fill="black"
