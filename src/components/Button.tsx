@@ -8,7 +8,7 @@ import clickAudioSound from "../assets/click.mp3";
 import tap from "../assets/tap.svg";
 
 const Button = ({
-  showIcon = false,
+  showIcon = true,
   onClick,
   className,
 }: {
@@ -53,7 +53,7 @@ const Button = ({
         src={tap}
         alt="tap"
         className={cn(
-          showIcon && "hidden",
+          !showIcon && "hidden",
           "relative size-24 translate-x-2 translate-y-2 -rotate-[3deg] fill-black stroke-black",
         )}
       />

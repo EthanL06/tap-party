@@ -32,7 +32,7 @@ const ReactTapIntro = () => {
                 src={tapImage}
               />
             </button>{" "}
-            too early.
+            too early or don&apos;t tap at all.
           </li>
           <li>The player with the fastest reaction time wins the round!</li>
 
@@ -48,6 +48,12 @@ const ReactTapIntro = () => {
             A lost round is{" "}
             <div className="outline-3 ml-0.5 inline-block size-3 rounded-full bg-red-500 outline outline-black"></div>{" "}
             .
+          </li>
+
+          <li>
+            5 seconds after{" "}
+            <img className="inline-block size-6" src={tapImage} /> appears, the
+            round automatically ends.
           </li>
         </ul>
       </div>

@@ -23,7 +23,9 @@ export const useGameStore = create<GameStore>()(
       clicks: {},
       clicksPercentage: {},
 
-      roundWinners: [],
+      reactRoundsWins: [],
+      reactedPlayers: [],
+      reactionTimes: {},
       currentRound: 0,
       roundTimeStart: 0,
       canReactionTap: false,
