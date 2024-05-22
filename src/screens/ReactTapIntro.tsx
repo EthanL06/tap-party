@@ -1,6 +1,5 @@
 import Board from "../components/Board";
 import tapImage from "../assets/tap.svg";
-import stickmanImage from "../assets/stickman.svg";
 import StylizedButton from "../components/StylizedButton";
 import { useGameStore } from "../store/useGameStore";
 

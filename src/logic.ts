@@ -274,6 +274,7 @@ Rune.initLogic({
         );
 
         const fastestPlayerId = Object.entries(game.reactionTimes).find(
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           ([_, reactionTime]) => reactionTime === fastestReactionTime,
         )![0] as PlayerId;
 
