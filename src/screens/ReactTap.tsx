@@ -6,6 +6,7 @@ import { useGameStore } from "../store/useGameStore";
 
 const ReactTap = () => {
   const canReactionTap = useGameStore((state) => state.game.canReactionTap);
+  const reactedPlayers = useGameStore((state) => state.game.reactedPlayers);
   const roundWinners = useGameStore((state) => state.game.reactRoundsWins);
   const playerID = useGameStore((state) => state.playerID);
 
@@ -38,6 +39,7 @@ const ReactTap = () => {
 
       <div className="flex grow items-center justify-center">
         <Button
+          disabled={reactedPlayers.includes(playerID)}
           showIcon={canReactionTap}
           onClick={() => {
             Rune.actions.reactTap();

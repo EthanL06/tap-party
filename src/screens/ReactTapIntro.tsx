@@ -14,7 +14,7 @@ const ReactTapIntro = () => {
         <Board>REACT TAP!</Board>
       </div>
 
-      <div className="mt-4 px-4">
+      <div className="fade-in mt-4 px-4">
         <div className="mb-3 inline-block border-b-[3px] border-black text-2xl font-black">
           HOW TO PLAY:
         </div>
@@ -38,13 +38,13 @@ const ReactTapIntro = () => {
 
           <li>There are a total of 9 rounds.</li>
 
-          <li>
+          <li className="ml-4">
             A won round is{" "}
             <div className="outline-3 ml-0.5 inline-block size-3 rounded-full bg-emerald-500 outline outline-black"></div>{" "}
             .
           </li>
 
-          <li>
+          <li className="ml-4">
             A lost round is{" "}
             <div className="outline-3 ml-0.5 inline-block size-3 rounded-full bg-red-500 outline outline-black"></div>{" "}
             .

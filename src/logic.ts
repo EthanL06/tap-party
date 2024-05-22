@@ -1,5 +1,11 @@
 import type { PlayerId, RuneClient } from "rune-games-sdk";
-import { COUNTDOWN_TIME, GAME_TIME, LOBBY_TIME } from "./lib/constants";
+import {
+  COUNTDOWN_TIME,
+  GAME_TIME,
+  LOBBY_TIME,
+  UPDATES_PER_SECOND,
+  UPDATE_INTERVAL,
+} from "./lib/constants";
 
 export type Screen =
   | "lobby"
@@ -293,7 +299,6 @@ Rune.initLogic({
             break;
           }
           case "react-tap": {
-            // game.timer = GAME_TIME * 1000;
             newReactTapRound(game);
             break;
           }
@@ -310,7 +315,7 @@ Rune.initLogic({
       return;
 
     if (game.countdown > 0) {
-      game.countdown -= 100;
+      game.countdown -= UPDATE_INTERVAL;
       return;
     }
 
@@ -337,12 +342,12 @@ Rune.initLogic({
     // Regular game updates
     switch (game.screen) {
       case "lobby": {
-        game.timer -= 100;
+        game.timer -= UPDATE_INTERVAL;
         break;
       }
 
       case "tug-a-tap": {
-        game.timer -= 100;
+        game.timer -= UPDATE_INTERVAL;
         tugATapUpdate(game);
         break;
       }
@@ -352,7 +357,7 @@ Rune.initLogic({
       }
     }
   },
-  updatesPerSecond: 10,
+  updatesPerSecond: UPDATES_PER_SECOND,
   events: {
     playerJoined(playerId, { game }) {
       game.playerIds.push(playerId);

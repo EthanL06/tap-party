@@ -23,7 +23,6 @@ function App() {
   const screen = useGameStore((state) => state.game.screen);
 
   return screens[screen];
-  // return <TugATapIntro />;
 }
 
 export default App;

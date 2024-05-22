@@ -14,7 +14,7 @@ const TugATapIntro = () => {
         <Board>TUG-A-TAP!</Board>
       </div>
 
-      <div className="mt-4 px-4">
+      <div className="fade-in mt-4 px-4">
         <div className="mb-3 inline-block border-b-[3px] border-black text-2xl font-black">
           HOW TO PLAY:
         </div>

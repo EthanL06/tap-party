@@ -1,15 +1,13 @@
 import Board from "../components/Board.tsx";
-import { useEffect } from "react";
 import Button from "../components/Button.tsx";
 import StickmanTug from "../components/StickmanTug.tsx";
 import Timer from "../components/Timer.tsx";
 import Banner from "../components/Banner.tsx";
 import Event from "../components/Event.tsx";
+import { useGameStore } from "../store/useGameStore.ts";
 
 function TugATap() {
-  useEffect(() => {
-    console.log("rerender");
-  });
+  const gameOver = useGameStore((state) => state.game.gameOver);
 
   return (
     <div className="relative flex h-full min-h-screen flex-col items-center justify-between">
@@ -20,7 +18,7 @@ function TugATap() {
         <Banner />
       </div>
 
-      <Button />
+      <Button disabled={gameOver} />
 
       <StickmanTug />
 

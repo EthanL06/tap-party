@@ -124,6 +124,15 @@
   }
 }
 
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 @layer utilities {
   .scale-in-fade-out {
     animation: scaleInFadeOut 0.5s cubic-bezier(0, 0.55, 0.45, 1);
@@ -177,5 +186,9 @@
   .fade-away {
     animation: fadeAway 0.65s ease-out;
     animation-delay: 0.5s;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.65s ease-out;
   }
 }
