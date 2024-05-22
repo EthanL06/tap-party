@@ -19,9 +19,17 @@ export const useGameStore = create<GameStore>()(
 
       playerIds: [],
       readyPlayers: [],
+
       clicks: {},
       clicksPercentage: {},
 
+      roundWinners: [],
+      currentRound: 0,
+      roundTimeStart: 0,
+      canReactionTap: false,
+      timeBeforeTap: 0,
+
+      gameMode: null,
       gameModeVotes: {
         "tug-a-tap": [],
         "tap-race": [],

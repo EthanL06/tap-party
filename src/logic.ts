@@ -6,6 +6,7 @@ export type Screen =
   | "tug-a-tap"
   | "tup-a-tap-intro"
   | "tap-race"
+  | "react-tap-intro"
   | "react-tap";
 export type GameMode = "tug-a-tap" | "tap-race" | "react-tap";
 
@@ -20,16 +21,28 @@ export interface GameState {
   // Player related properties
   playerIds: PlayerId[];
   readyPlayers: PlayerId[];
+
+  // Tug-a-tap related properties
   clicks: Record<PlayerId, number>;
   clicksPercentage: Record<PlayerId, number>;
 
+  // React tap related properties
+  roundWinners: PlayerId[];
+  currentRound: number;
+  roundTimeStart: number;
+  canReactionTap: boolean;
+  timeBeforeTap: number;
+
   // Game mode voting related properties
+  gameMode: GameMode | null;
   gameModeVotes: Record<GameMode, PlayerId[]>;
 }
 
 type GameActions = {
   castVote: (gameMode: GameMode) => void;
   click: () => void;
+  newReactTapRound: () => void;
+  reactTap: () => void;
   setPlayerReady: () => boolean;
   setScreen: (screen: Screen) => void;
 };
@@ -38,16 +51,16 @@ declare global {
   const Rune: RuneClient<GameState, GameActions>;
 }
 
-const gameModeToScreen: Record<GameMode, Screen> = {
+const gameModeToScreenIntro: Record<GameMode, Screen> = {
   "tug-a-tap": "tup-a-tap-intro",
   "tap-race": "tap-race",
-  "react-tap": "react-tap",
+  "react-tap": "react-tap-intro",
 };
 
 const selectRandomGameMode = (gameModes: string[]): Screen => {
   const randomIndex = Math.floor(Math.random() * gameModes.length);
   const randomGameMode = gameModes[randomIndex];
-  return gameModeToScreen[randomGameMode as GameMode];
+  return gameModeToScreenIntro[randomGameMode as GameMode];
 };
 
 const determineGameMode = (game: GameState) => {
@@ -69,7 +82,10 @@ const determineGameMode = (game: GameState) => {
   game.screen =
     tiedGameModes.length > 1
       ? selectRandomGameMode(tiedGameModes.map(({ gameMode }) => gameMode))
-      : (gameModeToScreen[tiedGameModes[0].gameMode as GameMode] as Screen);
+      : (gameModeToScreenIntro[
+          tiedGameModes[0].gameMode as GameMode
+        ] as Screen);
+  game.gameMode = tiedGameModes[0].gameMode as GameMode;
 };
 
 const tugATapUpdate = (game: GameState) => {
@@ -86,6 +102,15 @@ const tugATapUpdate = (game: GameState) => {
   );
 };
 
+const newReactTapRound = (game: GameState) => {
+  game.currentRound++;
+  game.roundTimeStart = Rune.gameTime();
+  game.canReactionTap = false;
+  game.timeBeforeTap = Math.floor(Math.random() * 5000) + 5000;
+
+  console.log(`${game.timeBeforeTap}ms before tap`);
+};
+
 Rune.initLogic({
   minPlayers: 2,
   maxPlayers: 4,
@@ -98,6 +123,8 @@ Rune.initLogic({
 
     playerIds: allPlayerIds,
     readyPlayers: [],
+
+    // Tug-a-tap related properties
     clicks: allPlayerIds.reduce(
       (acc, playerId) => {
         acc[playerId] = 0;
@@ -113,6 +140,14 @@ Rune.initLogic({
       {} as GameState["clicksPercentage"],
     ),
 
+    // React tap related properties
+    roundWinners: [],
+    currentRound: 0,
+    roundTimeStart: 0,
+    canReactionTap: false,
+    timeBeforeTap: 0,
+
+    gameMode: null,
     gameModeVotes: {
       "tug-a-tap": [],
       "tap-race": [],
@@ -132,8 +167,40 @@ Rune.initLogic({
 
       game.gameModeVotes[gameMode].push(playerId);
     },
+
     click: (_, { game, playerId }) => {
       game.clicks[playerId]++;
+    },
+
+    newReactTapRound: (_, { game }) => {
+      newReactTapRound(game);
+    },
+
+    reactTap: (_, { game, playerId }) => {
+      const time = Rune.gameTime();
+      // Check if the player reacted too early using Rune.gameTime()
+      if (time - game.roundTimeStart < game.timeBeforeTap) {
+        console.log("Player reacted too early");
+        return;
+      }
+
+      const reactionTime = time - game.roundTimeStart;
+      console.log(`Player ${playerId} reacted in ${reactionTime}ms`);
+      // game.roundWinners.push(playerId);
+
+      // if (game.roundWinners.length === game.playerIds.length) {
+      //   game.gameOver = true;
+      //   Rune.gameOver({
+      //     players: game.roundWinners.reduce(
+      //       (acc, playerId) => {
+      //         acc[playerId] = 1;
+      //         return acc;
+      //       },
+      //       {} as Record<PlayerId, number>,
+      //     ),
+      //     minimizePopUp: true,
+      //   });
+      // }
     },
 
     setPlayerReady: (_, { game, playerId }) => {
@@ -142,7 +209,8 @@ Rune.initLogic({
 
       if (game.readyPlayers.length === game.playerIds.length) {
         console.log("All players ready, starting game...");
-        game.screen = "tug-a-tap";
+
+        game.screen = game.gameMode as Screen;
         game.countdown = COUNTDOWN_TIME * 1000;
       }
     },
@@ -152,7 +220,8 @@ Rune.initLogic({
     },
   },
   update: ({ game }) => {
-    if (game.screen === "tup-a-tap-intro") return;
+    if (game.screen === "tup-a-tap-intro" || game.screen === "react-tap-intro")
+      return;
 
     if (game.countdown > 0) {
       game.countdown -= 100;
@@ -179,9 +248,23 @@ Rune.initLogic({
       }
     }
 
-    game.timer -= 100;
-    if (game.screen === "tug-a-tap") {
-      tugATapUpdate(game);
+    switch (game.screen) {
+      case "lobby": {
+        game.timer -= 100;
+        break;
+      }
+
+      case "tug-a-tap": {
+        game.timer -= 100;
+        tugATapUpdate(game);
+        break;
+      }
+
+      case "react-tap": {
+        if (Rune.gameTime() - game.roundTimeStart > game.timeBeforeTap) {
+          game.canReactionTap = true;
+        }
+      }
     }
   },
   updatesPerSecond: 10,

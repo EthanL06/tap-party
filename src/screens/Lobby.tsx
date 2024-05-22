@@ -13,7 +13,7 @@ const Lobby = () => {
         <div className="drop-in z-50">
           <Board>
             <div className="z-50 flex flex-col">
-              <span>TAP PARTY</span>
+              <span className="text-[3.4375rem]">TAP PARTY</span>
               <span className="text-lg font-bold">
                 Vote for a game mode below.
               </span>

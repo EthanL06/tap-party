@@ -4,21 +4,21 @@
 
 @font-face {
   font-family: "Opificio";
-  src: url("./assets/fonts/Opificio_rounded.ttf") format("truetype");
+  src: url("fonts/Opificio_rounded.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: "Opificio";
-  src: url("./assets/fonts/Opificio_Bold_rounded.ttf") format("truetype");
+  src: url("fonts/Opificio_Bold_rounded.ttf") format("truetype");
   font-weight: bold;
   font-style: normal;
 }
 
 @font-face {
   font-family: "Opificio";
-  src: url("./assets/fonts/Opificio_light_rounded.ttf") format("truetype");
+  src: url("fonts/Opificio_light_rounded.ttf") format("truetype");
   font-weight: lighter;
   font-style: normal;
 }
@@ -91,6 +91,17 @@
   }
 }
 
+@keyframes dropInFromBottom {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 @keyframes bigAndSmall {
   0% {
     transform: scale(3);
@@ -137,6 +148,14 @@
 
   .drop-in-2 {
     animation: drop-in-2 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  }
+
+  .drop-in-from-bottom {
+    animation: dropInFromBottom 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  }
+
+  .animate-delay-500 {
+    animation-delay: 500ms;
   }
 
   .animate-delay-600 {

@@ -4,14 +4,14 @@ import stickmanImage from "../assets/stickman.svg";
 import StylizedButton from "../components/StylizedButton";
 import { useGameStore } from "../store/useGameStore";
 
-const TugATapIntro = () => {
+const ReactTapIntro = () => {
   const readyPlayers = useGameStore((state) => state.game.readyPlayers);
   const playerID = useGameStore((state) => state.playerID);
 
   return (
     <div className="relative flex h-full min-h-screen flex-col">
       <div className="drop-in relative mt-4 w-full space-y-2 px-4">
-        <Board>TUG-A-TAP!</Board>
+        <Board>REACT TAP!</Board>
       </div>
 
       <div className="mt-4 px-4">
@@ -21,43 +21,34 @@ const TugATapIntro = () => {
 
         <ul className="list-['-_'] px-4 text-base font-black">
           <li>
-            Tap the{" "}
+            Tap the button when{" "}
+            <img className="inline-block size-6" src={tapImage} /> appears!
+          </li>
+          <li>
+            You <span className="underline">lose</span> the round if you tap{" "}
             <button className="stylized-shadow inline-block rounded-full transition-all active:translate-y-1 active:scale-90 active:shadow-none">
               <img
                 className="inline-block size-8 rounded-full border-2 border-black p-1"
                 src={tapImage}
               />
             </button>{" "}
-            as fast as you can!
+            too early.
           </li>
+          <li>The player with the fastest reaction time wins the round!</li>
+
+          <li>There are a total of 9 rounds.</li>
+
           <li>
-            Each tap moves
-            <img className="inline-block size-8" src={stickmanImage} />
-            to the right.
-          </li>
-          <li>
-            Each opponent tap moves
-            <img className="inline-block size-8" src={stickmanImage} />
-            to the left.
-          </li>
-          <li>
-            Keep
-            <img className="inline-block size-8" src={stickmanImage} />
-            to the right of the center line.
+            A won round is{" "}
+            <div className="outline-3 ml-0.5 inline-block size-3 rounded-full bg-emerald-500 outline outline-black"></div>{" "}
+            .
           </li>
 
           <li>
-            If
-            <img className="inline-block size-8" src={stickmanImage} />
-            is not moving, tap faster!
+            A lost round is{" "}
+            <div className="outline-3 ml-0.5 inline-block size-3 rounded-full bg-red-500 outline outline-black"></div>{" "}
+            .
           </li>
-
-          <li>
-            You have{" "}
-            <span className="underline underline-offset-2">30 seconds</span> to
-            tap.
-          </li>
-          <li>The player with the most taps wins!</li>
         </ul>
       </div>
 
@@ -75,7 +66,6 @@ const TugATapIntro = () => {
 
             <div className="size-8" />
           </div>
-
           <div className="drop-in-from-bottom  opacity-0">
             <StylizedButton
               className="px-8"
@@ -93,4 +83,4 @@ const TugATapIntro = () => {
   );
 };
 
-export default TugATapIntro;
+export default ReactTapIntro;
