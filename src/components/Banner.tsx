@@ -5,21 +5,46 @@ import { useGameStore } from "../store/useGameStore";
 import { cn } from "../lib/utils";
 
 const Banner = () => {
+  const screen = useGameStore((state) => state.game.screen);
   const gameOver = useGameStore((state) => state.game.gameOver);
   const yourClicksPercentage = useGameStore(
     (state) => state.game.clicksPercentage[state.playerID],
   );
-
-  const opponentClicksPercentage = 100 - yourClicksPercentage;
+  const reactRoundWins = useGameStore((state) => state.game.reactRoundsWins);
+  const playerID = useGameStore((state) => state.playerID);
 
   if (!gameOver) return null;
 
   const determineFlag = () => {
-    if (yourClicksPercentage === 50) return bannerTied;
+    switch (screen) {
+      case "tug-a-tap": {
+        const opponentClicksPercentage = 100 - yourClicksPercentage;
 
-    return yourClicksPercentage > opponentClicksPercentage
-      ? bannerWinner
-      : bannerLoser;
+        if (yourClicksPercentage === 50) return bannerTied;
+
+        return yourClicksPercentage > opponentClicksPercentage
+          ? bannerWinner
+          : bannerLoser;
+      }
+
+      case "react-tap": {
+        // Get wins of every player
+        const wins: { [key: string]: number } = reactRoundWins.reduce(
+          (acc, curr) => {
+            acc[curr] = (acc[curr] || 0) + 1;
+            return acc;
+          },
+          {} as { [key: string]: number },
+        );
+
+        // Sort wins in descending order
+        const sortedWins = Object.entries(wins).sort((a, b) => b[1] - a[1]);
+
+        // If the first player is the current player, return the winner banner
+        if (sortedWins[0][0] === playerID) return bannerWinner;
+        return bannerLoser;
+      }
+    }
   };
 
   return (

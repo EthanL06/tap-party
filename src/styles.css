@@ -4,21 +4,21 @@
 
 @font-face {
   font-family: "Opificio";
-  src: url("fonts/Opificio_rounded.ttf") format("truetype");
+  src: url("./assets/fonts/Opificio_rounded.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: "Opificio";
-  src: url("fonts/Opificio_Bold_rounded.ttf") format("truetype");
+  src: url("./assets/fonts/Opificio_Bold_rounded.ttf") format("truetype");
   font-weight: bold;
   font-style: normal;
 }
 
 @font-face {
   font-family: "Opificio";
-  src: url("fonts/Opificio_light_rounded.ttf") format("truetype");
+  src: url("./assets/fonts/Opificio_light_rounded.ttf") format("truetype");
   font-weight: lighter;
   font-style: normal;
 }

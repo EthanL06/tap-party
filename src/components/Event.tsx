@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useGameStore } from "../store/useGameStore";
 
 const Event = () => {
+  const gameStart = useGameStore((state) => state.game.gameStart);
   const countdown = Math.round(
     useGameStore((state) => state.game.countdown) / 1000,
   );
@@ -15,7 +16,7 @@ const Event = () => {
     }
   }, [countdown, messages.length]);
 
-  if (countdown <= 0) return null;
+  if (countdown <= 0 || gameStart) return null;
 
   return (
     <div

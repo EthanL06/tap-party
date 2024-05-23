@@ -14,8 +14,9 @@ export const useGameStore = create<GameStore>()(
       screen: "lobby",
       timer: 0,
       countdown: 0,
-      gameStart: 0,
+      gameStart: false,
       gameOver: false,
+      winner: null,
 
       playerIds: [],
       readyPlayers: [],
@@ -30,6 +31,8 @@ export const useGameStore = create<GameStore>()(
       roundTimeStart: 0,
       canReactionTap: false,
       timeBeforeTap: 0,
+      timeBetweenRounds: 0,
+      hasRoundEnded: false,
 
       gameMode: null,
       gameModeVotes: {

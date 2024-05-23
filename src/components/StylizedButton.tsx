@@ -1,4 +1,8 @@
 import React from "react";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+import useSound from "use-sound";
+import selectSound from "../assets/select.wav";
 import { cn } from "../lib/utils";
 
 type Props = {
@@ -14,9 +18,14 @@ const StylizedButton = ({
   disabled = false,
   children,
 }: Props) => {
+  const [play] = useSound(selectSound);
+
   return (
     <button
-      onClick={onClick}
+      onClick={() => {
+        play();
+        onClick();
+      }}
       disabled={disabled}
       className={cn(
         "stylized-shadow relative rounded border-[4px] border-black p-3 transition-all ",

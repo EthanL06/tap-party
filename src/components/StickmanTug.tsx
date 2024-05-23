@@ -62,7 +62,7 @@ const StickmanTug = () => {
           "absolute -top-10 size-16 -translate-x-1/2 transition-all",
         )}
       >
-        <Shadow />
+        <Shadow className="-bottom-1 left-1/2 z-50 -translate-x-1/2 " />
 
         <img
           ref={stickmanRef}
@@ -88,14 +88,15 @@ const HalfwayLine = () => {
   );
 };
 
-function Shadow() {
+export function Shadow({ className }: { className?: string }) {
   return (
     <div
       style={{
         clipPath: `ellipse(50% 50%)`,
       }}
       className={cn(
-        "absolute -bottom-1 left-1/2 z-50 h-2.5 w-12 -translate-x-1/2 rounded-full bg-[rgb(221_173_50)]",
+        "absolute  h-2.5 w-12  rounded-full bg-[rgb(221_173_50)]",
+        className,
       )}
     ></div>
   );

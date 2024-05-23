@@ -3,7 +3,8 @@ import {
   COUNTDOWN_TIME,
   GAME_TIME,
   LOBBY_TIME,
-  UPDATES_PER_SECOND,
+  TIME_BETWEEN_ROUNDS,
+  TOTAL_REACT_TAP_ROUNDS,
   UPDATE_INTERVAL,
 } from "./lib/constants";
 
@@ -21,8 +22,9 @@ export interface GameState {
   screen: Screen;
   timer: number;
   countdown: number;
-  gameStart: number;
+  gameStart: boolean;
   gameOver: boolean;
+  winner: PlayerId | null;
 
   // Player related properties
   playerIds: PlayerId[];
@@ -40,6 +42,8 @@ export interface GameState {
   roundTimeStart: number;
   canReactionTap: boolean;
   timeBeforeTap: number;
+  timeBetweenRounds: number;
+  hasRoundEnded: boolean;
 
   // Game mode voting related properties
   gameMode: GameMode | null;
@@ -49,7 +53,6 @@ export interface GameState {
 type GameActions = {
   castVote: (gameMode: GameMode) => void;
   click: () => void;
-  newReactTapRound: () => void;
   reactTap: () => void;
   setPlayerReady: () => boolean;
   setScreen: (screen: Screen) => void;
@@ -87,7 +90,7 @@ const determineGameMode = (game: GameState) => {
     ({ voteCount }) => voteCount === maxVotes,
   );
 
-  game.timer = GAME_TIME * 1000;
+  game.timer = GAME_TIME;
   game.screen =
     tiedGameModes.length > 1
       ? selectRandomGameMode(tiedGameModes.map(({ gameMode }) => gameMode))
@@ -116,7 +119,41 @@ const tugATapUpdate = (game: GameState) => {
 
 // REACT-TAP RELATED FUNCTIONS
 const newReactTapRound = (game: GameState) => {
+  if (game.gameOver) return;
+
   game.currentRound++;
+
+  if (game.currentRound > TOTAL_REACT_TAP_ROUNDS) {
+    const allPlayerIds = game.playerIds;
+    const playerWins = allPlayerIds.reduce(
+      (acc, playerId) => {
+        acc[playerId] = game.reactRoundsWins.filter(
+          (winnerId) => winnerId === playerId,
+        ).length;
+        return acc;
+      },
+      {} as Record<PlayerId, number>,
+    );
+
+    Rune.gameOver({
+      players: playerWins,
+      minimizePopUp: true,
+    });
+
+    game.winner = Object.entries(playerWins).reduce(
+      (acc, [playerId, wins]) => {
+        if (wins > acc.wins) {
+          acc.playerId = playerId;
+          acc.wins = wins;
+        }
+        return acc;
+      },
+      { playerId: "", wins: 0 },
+    ).playerId;
+    game.gameOver = true;
+    game.hasRoundEnded = false;
+    return;
+  }
   game.roundTimeStart = Rune.gameTime();
   game.canReactionTap = false;
   game.timeBeforeTap = Math.floor(Math.random() * 5000) + 5000;
@@ -129,13 +166,18 @@ const newReactTapRound = (game: GameState) => {
     {} as GameState["reactionTimes"],
   );
 
-  console.log(`${game.timeBeforeTap}ms before tap`);
+  console.log(`New round start! ${game.timeBeforeTap}ms before tap`);
 };
 
 const reactTapUpdate = (game: GameState) => {
   // If the time before tap has passed, allow players to react
-  if (Rune.gameTime() - game.roundTimeStart > game.timeBeforeTap) {
+  if (
+    !game.canReactionTap &&
+    Rune.gameTime() - game.roundTimeStart > game.timeBeforeTap
+  ) {
+    console.log("Players can now react.");
     game.canReactionTap = true;
+    return;
   }
 
   // If after 5 seconds and not all players have reacted
@@ -149,8 +191,9 @@ const reactTapUpdate = (game: GameState) => {
     // If no players have reacted, start a new round
     if (reactionTimes.every((reactionTime) => reactionTime === 0)) {
       console.log("No players reacted, starting new round");
-      game.reactRoundsWins.push("none");
-      newReactTapRound(game);
+      game.reactRoundsWins.push("_");
+      game.hasRoundEnded = true;
+      game.timeBetweenRounds = TIME_BETWEEN_ROUNDS;
       return;
     }
 
@@ -166,7 +209,10 @@ const reactTapUpdate = (game: GameState) => {
 
     game.reactRoundsWins.push(fastestPlayerId);
     console.log(`Player ${fastestPlayerId} won the round`);
-    newReactTapRound(game);
+
+    // FIX HERE!!!
+    game.hasRoundEnded = true;
+    game.timeBetweenRounds = TIME_BETWEEN_ROUNDS;
   }
 };
 // END OF REACT-TAP RELATED FUNCTIONS
@@ -176,10 +222,11 @@ Rune.initLogic({
   maxPlayers: 4,
   setup: (allPlayerIds) => ({
     screen: "lobby",
-    timer: LOBBY_TIME * 1000,
+    timer: LOBBY_TIME,
     countdown: 0,
-    gameStart: Rune.gameTime(),
+    gameStart: false,
     gameOver: false,
+    winner: null,
 
     playerIds: allPlayerIds,
     readyPlayers: [],
@@ -214,6 +261,8 @@ Rune.initLogic({
     roundTimeStart: 0,
     canReactionTap: false,
     timeBeforeTap: 0,
+    timeBetweenRounds: 0,
+    hasRoundEnded: false,
 
     gameMode: null,
     gameModeVotes: {
@@ -234,25 +283,39 @@ Rune.initLogic({
       });
 
       game.gameModeVotes[gameMode].push(playerId);
+
+      // Get the number of players that have voted
+      const totalVotes = gameModes.reduce(
+        (acc, mode) => acc + game.gameModeVotes[mode].length,
+        0,
+      );
+
+      if (totalVotes === game.playerIds.length) {
+        determineGameMode(game);
+      }
     },
 
     click: (_, { game, playerId }) => {
       game.clicks[playerId]++;
     },
 
-    newReactTapRound: (_, { game }) => {
-      newReactTapRound(game);
-    },
-
     reactTap: (_, { game, playerId, allPlayerIds }) => {
       const time = Rune.gameTime();
       // Check if the player reacted too early using Rune.gameTime()
       if (time - game.roundTimeStart < game.timeBeforeTap) {
+        // FIX HERE!!! SO IT WORKS FOR JUST NOT 2 PLAYERS
         console.log("Player reacted too early");
+        game.reactedPlayers.push(playerId);
+        game.reactionTimes[playerId] = -1;
+
         game.reactRoundsWins.push(
-          allPlayerIds[0] === playerId ? allPlayerIds[1] : allPlayerIds[0],
+          allPlayerIds.filter(
+            (playerId) => game.reactionTimes[playerId] !== -1,
+          )[0],
         );
-        newReactTapRound(game);
+
+        game.hasRoundEnded = true;
+        game.timeBetweenRounds = TIME_BETWEEN_ROUNDS;
         return;
       }
 
@@ -266,6 +329,7 @@ Rune.initLogic({
 
       game.reactedPlayers.push(playerId);
 
+      // If all players have reacted, find the fastest reaction time
       if (game.reactedPlayers.length === game.playerIds.length) {
         game.canReactionTap = false;
         // Find the player with the fastest reaction time and then append their id to reactRoundsWins
@@ -280,7 +344,9 @@ Rune.initLogic({
 
         game.reactRoundsWins.push(fastestPlayerId);
         console.log(`Player ${fastestPlayerId} won the round`);
-        newReactTapRound(game);
+
+        game.hasRoundEnded = true;
+        game.timeBetweenRounds = TIME_BETWEEN_ROUNDS;
       }
     },
 
@@ -293,14 +359,13 @@ Rune.initLogic({
 
         game.screen = game.gameMode as Screen;
 
+        game.countdown = COUNTDOWN_TIME;
         switch (game.gameMode) {
           case "tug-a-tap": {
-            game.timer = GAME_TIME * 1000;
-            game.countdown = COUNTDOWN_TIME * 1000;
+            game.timer = GAME_TIME;
             break;
           }
           case "react-tap": {
-            newReactTapRound(game);
             break;
           }
         }
@@ -312,7 +377,11 @@ Rune.initLogic({
     },
   },
   update: ({ game }) => {
-    if (game.screen === "tup-a-tap-intro" || game.screen === "react-tap-intro")
+    if (
+      game.screen === "tup-a-tap-intro" ||
+      game.screen === "react-tap-intro" ||
+      game.gameOver
+    )
       return;
 
     if (game.countdown > 0) {
@@ -320,7 +389,19 @@ Rune.initLogic({
       return;
     }
 
-    // IF the timer is up
+    // When countdown is over...
+    if (!game.gameStart && game.screen !== "lobby") {
+      game.gameStart = true;
+
+      switch (game.gameMode) {
+        case "react-tap": {
+          newReactTapRound(game);
+          return;
+        }
+      }
+    }
+
+    // IF the timer is up (for lobby and tug-a-tap)
     if (game.timer <= 0) {
       switch (game.screen) {
         case "lobby": {
@@ -336,7 +417,24 @@ Rune.initLogic({
             },
             minimizePopUp: true,
           });
+          game.winner =
+            game.clicks[game.playerIds[0]] > game.clicks[game.playerIds[1]]
+              ? game.playerIds[0]
+              : game.playerIds[1];
           break;
+      }
+    }
+
+    if (game.gameMode === "react-tap" && game.hasRoundEnded) {
+      if (game.timeBetweenRounds > 0) {
+        game.timeBetweenRounds -= UPDATE_INTERVAL;
+        return;
+      } else {
+        console.log("Starting new round...");
+        game.timeBetweenRounds = 0;
+        game.hasRoundEnded = false;
+        newReactTapRound(game);
+        return;
       }
     }
 
@@ -355,10 +453,11 @@ Rune.initLogic({
 
       case "react-tap": {
         reactTapUpdate(game);
+        break;
       }
     }
   },
-  updatesPerSecond: UPDATES_PER_SECOND,
+  updatesPerSecond: 10,
   events: {
     playerJoined(playerId, { game }) {
       game.playerIds.push(playerId);
