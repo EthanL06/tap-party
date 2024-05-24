@@ -89,10 +89,21 @@ const ReactTap = () => {
               "scale-[1.3] active:scale-105",
           )}
           disabled={
-            reactedPlayers.includes(playerID) || hasRoundEnded || gameOver
+            (!gameOver && reactedPlayers.includes(playerID)) ||
+            (hasRoundEnded && !gameOver)
           }
-          showIcon={canReactionTap}
+          showIcon={canReactionTap || gameOver}
           onClick={() => {
+            Rune.actions.reactTap();
+          }}
+          onTouchStart={() => {
+            if (hasRoundEnded) return;
+
+            Rune.actions.reactTap();
+          }}
+          onMouseDown={() => {
+            if (hasRoundEnded) return;
+
             Rune.actions.reactTap();
           }}
         />

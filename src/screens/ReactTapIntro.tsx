@@ -24,6 +24,16 @@ const ReactTapIntro = () => {
             <img className="inline-block size-6" src={tapImage} /> appears!
           </li>
           <li>
+            After the{" "}
+            <button className="stylized-shadow inline-block rounded-full transition-all active:translate-y-1 active:scale-90 active:shadow-none">
+              <img
+                className="inline-block size-8 rounded-full border-2 border-black p-1"
+                src={tapImage}
+              />
+            </button>{" "}
+            appears, you have 5 seconds to tap the button.
+          </li>
+          <li>
             You <span className="underline">lose</span> the round if you tap{" "}
             <button className="stylized-shadow inline-block rounded-full transition-all active:translate-y-1 active:scale-90 active:shadow-none">
               <img
@@ -31,28 +41,19 @@ const ReactTapIntro = () => {
                 src={tapImage}
               />
             </button>{" "}
-            too early or don&apos;t tap at all.
+            too early or don't tap at all.
           </li>
           <li>The player with the fastest reaction time wins the round!</li>
-
           <li>There are a total of 9 rounds.</li>
-
           <li className="ml-4">
             A won round is{" "}
             <div className="outline-3 ml-0.5 inline-block size-3 rounded-full bg-emerald-500 outline outline-black"></div>{" "}
             .
           </li>
-
           <li className="ml-4">
             A lost round is{" "}
             <div className="outline-3 ml-0.5 inline-block size-3 rounded-full bg-red-500 outline outline-black"></div>{" "}
             .
-          </li>
-
-          <li>
-            5 seconds after{" "}
-            <img className="inline-block size-6" src={tapImage} /> appears, the
-            round automatically ends.
           </li>
         </ul>
       </div>

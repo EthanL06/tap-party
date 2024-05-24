@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { ButtonHTMLAttributes, useState } from "react";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
 import useSound from "use-sound";
@@ -6,17 +6,12 @@ import { cn } from "../lib/utils";
 import clickAudioSound from "../assets/click.mp3";
 import tap from "../assets/tap.svg";
 
-const Button = ({
-  showIcon = true,
-  onClick,
-  className,
-  disabled = false,
-}: {
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   showIcon?: boolean;
-  onClick?: () => void;
   className?: string;
-  disabled?: boolean;
-}) => {
+}
+
+const Button = ({ showIcon = true, className, ...props }: ButtonProps) => {
   const [play] = useSound(clickAudioSound);
   const [divs, setDivs] = useState<number[]>([]);
 
@@ -31,14 +26,16 @@ const Button = ({
 
   return (
     <button
-      disabled={disabled}
-      onClick={() => {
-        onClick?.();
+      {...props}
+      disabled={props.disabled}
+      onClick={(event) => {
+        props.onClick?.(event);
         handleClick();
       }}
       className={cn(
         "stylized-shadow focus:stylized-shadow group relative flex size-44 items-center justify-center rounded-full border-4 border-black bg-[#ffcb39] p-2 transition-all ",
-        !disabled && "active:translate-y-1 active:scale-95 active:shadow-none",
+        !props.disabled &&
+          "active:translate-y-1 active:scale-95 active:shadow-none",
         className,
       )}
     >

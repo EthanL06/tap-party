@@ -45,13 +45,11 @@ const TugATapIntro = () => {
             <img className="inline-block size-8" src={stickmanImage} />
             to the right of the center line.
           </li>
-
           <li>
             If
             <img className="inline-block size-8" src={stickmanImage} />
             is not moving, tap faster!
           </li>
-
           <li>
             You have{" "}
             <span className="underline underline-offset-2">30 seconds</span> to

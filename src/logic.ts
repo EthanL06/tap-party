@@ -291,7 +291,15 @@ Rune.initLogic({
       );
 
       if (totalVotes === game.playerIds.length) {
-        determineGameMode(game);
+        // Get number of votes for each game mode
+        const votes = gameModes.map((mode) => game.gameModeVotes[mode].length);
+
+        // If there is game mode with all votes, set the game mode
+        const maxVotes = Math.max(...votes);
+
+        if (maxVotes === game.playerIds.length) {
+          determineGameMode(game);
+        }
       }
     },
 
@@ -300,6 +308,7 @@ Rune.initLogic({
     },
 
     reactTap: (_, { game, playerId, allPlayerIds }) => {
+      if (game.gameOver) return;
       const time = Rune.gameTime();
       // Check if the player reacted too early using Rune.gameTime()
       if (time - game.roundTimeStart < game.timeBeforeTap) {
@@ -337,10 +346,20 @@ Rune.initLogic({
           ...Object.values(game.reactionTimes),
         );
 
-        const fastestPlayerId = Object.entries(game.reactionTimes).find(
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          ([_, reactionTime]) => reactionTime === fastestReactionTime,
-        )![0] as PlayerId;
+        // Find all players with the fastest reaction time
+        const fastestPlayers = Object.entries(game.reactionTimes)
+          .filter(([_, reactionTime]) => reactionTime === fastestReactionTime)
+          .map(([playerId, _]) => playerId);
+
+        // Randomly select one of the fastest players
+        const fastestPlayerId = fastestPlayers[
+          Math.floor(Math.random() * fastestPlayers.length)
+        ] as PlayerId;
+
+        // const fastestPlayerId = Object.entries(game.reactionTimes).find(
+        //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        //   ([_, reactionTime]) => reactionTime === fastestReactionTime,
+        // )![0] as PlayerId;
 
         game.reactRoundsWins.push(fastestPlayerId);
         console.log(`Player ${fastestPlayerId} won the round`);
