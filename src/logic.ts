@@ -126,22 +126,6 @@ const determineGameMode = (game: GameState) => {
 };
 // END OF LOBBY RELATED FUNCTIONS
 
-// TUG-A-TAP RELATED FUNCTIONS
-const tugATapUpdate = (game: GameState) => {
-  // const clickDifference =
-  //   game.clicks[game.playerIds[0]] - game.clicks[game.playerIds[1]];
-  // const scalingFactor = 5; // Adjust this value as needed
-  // game.clicksPercentage[game.playerIds[0]] = Math.max(
-  //   0,
-  //   Math.min(50 + clickDifference * scalingFactor, 100),
-  // );
-  // game.clicksPercentage[game.playerIds[1]] = Math.max(
-  //   0,
-  //   100 - game.clicksPercentage[game.playerIds[0]],
-  // );
-};
-// END OF TUG-A-TAP RELATED FUNCTIONS
-
 // REACT-TAP RELATED FUNCTIONS
 const newReactTapRound = (game: GameState) => {
   if (game.gameOver) return;
@@ -394,10 +378,10 @@ Rune.initLogic({
       const time = Rune.gameTime();
       // Check if the player reacted too early using Rune.gameTime()
       if (time - game.roundTimeStart < game.timeBeforeTap) {
-        // FIX HERE!!! SO IT WORKS FOR JUST NOT 2 PLAYERS
         game.reactedPlayers.push(playerId);
         game.reactionTimes[playerId] = -1;
 
+        // If all but one player has reacted early, end the round
         if (game.reactedPlayers.length === game.playerIds.length - 1) {
           game.reactRoundsWins.push(
             allPlayerIds.filter(
@@ -408,15 +392,6 @@ Rune.initLogic({
           game.hasRoundEnded = true;
           game.timeBetweenRounds = TIME_BETWEEN_ROUNDS;
         }
-
-        // game.reactRoundsWins.push(
-        //   allPlayerIds.filter(
-        //     (playerId) => game.reactionTimes[playerId] !== -1,
-        //   )[0],
-        // );
-
-        // game.hasRoundEnded = true;
-        // game.timeBetweenRounds = TIME_BETWEEN_ROUNDS;
         return;
       }
 
@@ -632,7 +607,6 @@ Rune.initLogic({
 
       case "tug-a-tap": {
         game.timer -= UPDATE_INTERVAL;
-        tugATapUpdate(game);
         break;
       }
 
