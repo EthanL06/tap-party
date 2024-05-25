@@ -5,9 +5,17 @@ import Timer from "../components/Timer.tsx";
 import Banner from "../components/Banner.tsx";
 import Event from "../components/Event.tsx";
 import { useGameStore } from "../store/useGameStore.ts";
+import { useEffect } from "react";
+import { useAudioStore } from "../store/useAudioStore.ts";
+import { cn } from "../lib/utils.ts";
 
 function TugATap() {
   const gameOver = useGameStore((state) => state.game.gameOver);
+  const stopLobbyMusic = useAudioStore((state) => state.stopLobbyMusic);
+
+  useEffect(() => {
+    stopLobbyMusic();
+  }, [stopLobbyMusic]);
 
   return (
     <div className="relative flex h-full min-h-screen flex-col items-center justify-between">
@@ -18,7 +26,13 @@ function TugATap() {
         <Banner />
       </div>
 
-      <Button disabled={gameOver} />
+      <Button
+        onClick={() => {
+          Rune.actions.click();
+        }}
+        className={cn(gameOver && "opacity-50")}
+        disabled={gameOver}
+      />
 
       <StickmanTug />
 

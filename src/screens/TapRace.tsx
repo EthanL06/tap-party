@@ -12,18 +12,22 @@ import { useEffect, useRef, useState } from "react";
 import Timer from "../components/Timer";
 import Event from "../components/Event";
 import { useGameStore } from "../store/useGameStore";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
 import useSound from "use-sound";
 import selectSound from "../assets/select.wav";
 import { PlayerId } from "rune-games-sdk";
+import { useAudioStore } from "../store/useAudioStore";
 
 const TapRace = () => {
   const [play] = useSound(selectSound);
-  // const playerDistances = useGameStore((state) => state.game.playerDistances);
+  const stopLobbyMusic = useAudioStore((state) => state.stopLobbyMusic);
+
   const playerIDs = useGameStore((state) => state.game.playerIds);
   const playerID = useGameStore((state) => state.playerID);
   const gameOver = useGameStore((state) => state.game.gameOver);
+
+  useEffect(() => {
+    stopLobbyMusic();
+  }, [stopLobbyMusic]);
 
   const [side, setSide] = useState<"left" | "right">("left");
 
@@ -38,7 +42,7 @@ const TapRace = () => {
         <Banner />
       </div>
 
-      <div className="mt-12 flex w-full flex-col gap-y-1 px-4">
+      <div className="mt-12 flex w-full grow flex-col justify-between gap-y-1  px-4">
         <StickmanTrack playerID={playerID} />
 
         {otherPlayers.map((id) => (

@@ -3,8 +3,6 @@ import stickmanImage from "../assets/stickman.svg";
 import StylizedButton from "../components/StylizedButton";
 import { useGameStore } from "../store/useGameStore";
 import clickSound from "../assets/select.wav";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
 import useSound from "use-sound";
 import { cn } from "../lib/utils";
 const TapRaceIntro = () => {
@@ -59,7 +57,7 @@ const TapRaceIntro = () => {
           </li>
 
           <li>
-            The race lasts for{" "}
+            The race lasts for a maximum of{" "}
             <span className="underline underline-offset-2">60 seconds</span>.{" "}
           </li>
           <li>The first player to reach the end of the track wins!</li>

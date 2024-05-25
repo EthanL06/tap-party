@@ -7,22 +7,30 @@ import { cn } from "../lib/utils";
 const Banner = () => {
   const screen = useGameStore((state) => state.game.screen);
   const gameOver = useGameStore((state) => state.game.gameOver);
-  const yourClicksPercentage = useGameStore(
-    (state) => state.game.clicksPercentage[state.playerID],
-  );
 
+  const playerIDs = useGameStore((state) => state.game.playerIds);
   const playerID = useGameStore((state) => state.playerID);
   const winner = useGameStore((state) => state.game.winner);
+
+  const allClicks = useGameStore((state) => state.game.clicks);
+
   if (!gameOver) return null;
 
   const determineFlag = () => {
     switch (screen) {
       case "tug-a-tap": {
-        if (yourClicksPercentage === 50) return bannerTied;
+        if (
+          Object.values(allClicks).every(
+            (clicks) => clicks === allClicks[playerIDs[0]],
+          )
+        )
+          return bannerTied;
         return winner === playerID ? bannerWinner : bannerLoser;
       }
       case "react-tap":
       case "tap-race": {
+        if (winner === null) return bannerTied;
+
         return winner === playerID ? bannerWinner : bannerLoser;
       }
     }

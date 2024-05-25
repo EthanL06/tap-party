@@ -184,8 +184,12 @@
   }
 
   .fade-away {
-    animation: fadeAway 0.65s ease-out;
+    animation: fadeAway 0.65s ease-out forwards;
     animation-delay: 0.5s;
+  }
+
+  .fade-away-no-delay {
+    animation: fadeAway 0.65s ease-out forwards;
   }
 
   .fade-in {

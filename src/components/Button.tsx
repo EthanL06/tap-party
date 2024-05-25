@@ -1,6 +1,4 @@
 import { ButtonHTMLAttributes, useState } from "react";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
 import useSound from "use-sound";
 import { cn } from "../lib/utils";
 import clickAudioSound from "../assets/click.mp3";
@@ -16,8 +14,6 @@ const Button = ({ showIcon = true, className, ...props }: ButtonProps) => {
   const [divs, setDivs] = useState<number[]>([]);
 
   const handleClick = () => {
-    Rune.actions.click();
-
     play();
 
     setDivs((prevDivs) => [...prevDivs, Date.now()]);

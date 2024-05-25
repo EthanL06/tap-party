@@ -20,7 +20,7 @@
     "noFallthroughCasesInSwitch": true,
 
     "paths": {
-      "use-source": ["./generated-types/"]
+      "use-sound": ["./generated-types/"]
     }
   },
   "include": ["src"],

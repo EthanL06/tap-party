@@ -11,6 +11,10 @@ import stickman from "../assets/stickman.svg";
 import stickmanHappy from "../assets/stickman-happy.svg";
 import stickmanSad from "../assets/stickman-sad.svg";
 import { Shadow } from "../components/StickmanTug";
+import { useEffect } from "react";
+import { useAudioStore } from "../store/useAudioStore";
+import useSound from "use-sound";
+import clickSound from "../assets/click.mp3";
 
 const ReactTap = () => {
   const canReactionTap = useGameStore((state) => state.game.canReactionTap);
@@ -23,6 +27,13 @@ const ReactTap = () => {
   const playerID = useGameStore((state) => state.playerID);
   const gameOver = useGameStore((state) => state.game.gameOver);
   const winner = useGameStore((state) => state.game.winner);
+
+  const stopLobbyMusic = useAudioStore((state) => state.stopLobbyMusic);
+  const [play] = useSound(clickSound);
+
+  useEffect(() => {
+    stopLobbyMusic();
+  }, [stopLobbyMusic]);
 
   const determineStickman = () => {
     if (gameOver && winner != null) {
@@ -96,22 +107,25 @@ const ReactTap = () => {
           onClick={() => {
             if (hasRoundEnded) return;
 
+            play();
             Rune.actions.reactTap();
           }}
           onTouchStart={() => {
             if (hasRoundEnded) return;
 
+            play();
             Rune.actions.reactTap();
           }}
           onMouseDown={() => {
             if (hasRoundEnded) return;
 
+            play();
             Rune.actions.reactTap();
           }}
         />
       </div>
 
-      <div className="relative mt-3">
+      <div className="relative mb-16">
         <Shadow className={cn("bottom-7 left-1/2 -translate-x-1/2")} />
         <img
           src={stickmanImage}
@@ -142,6 +156,8 @@ const ReactionTimes = ({
   myPlayerID: string;
   roundWinners: string[];
 }) => {
+  const totalPlayers = useGameStore((state) => state.game.playerIds.length);
+
   const displayName = (id: PlayerId) => {
     const name = Rune.getPlayerInfo(id).displayName;
 
@@ -159,7 +175,11 @@ const ReactionTimes = ({
 
     // Find if any players have a reaction time of -1 and get their id
     const earlyPlayers = reactionTimes.find(([, time]) => time === -1)?.[0];
-    if (earlyPlayers === myPlayerID) {
+    const didIReactTooEarly = reactionTimes.find(
+      ([playerID, time]) => playerID === myPlayerID && time === -1,
+    );
+
+    if (didIReactTooEarly) {
       return "You reacted too early!";
     } else if (earlyPlayers) {
       return `${displayName(earlyPlayers)} reacted too early!`;
@@ -188,6 +208,80 @@ const ReactionTimes = ({
     return null;
   }
 
+  const myReactionTime = reactionTimes.find(
+    ([playerID]) => playerID === myPlayerID,
+  )?.[1];
+
+  // Edge case where one player reacted too early and the rest didn't react
+  if (reactionTimes.some(([, time]) => time === -1)) {
+    const count = reactionTimes.filter(([, time]) => time === -1).length;
+
+    if (count < totalPlayers - 1) {
+      const determineMyMessage = () => {
+        if (myReactionTime === -1) {
+          return "You reacted too early!";
+        } else if (myReactionTime === 0) {
+          return "You didn't react!";
+        }
+
+        return "You reacted in " + myReactionTime + "ms.";
+      };
+      return (
+        <div className="mt-6 w-full ">
+          <div className="mx-auto mt-6 w-full max-w-72 text-center text-3xl font-bold">
+            Round Over
+          </div>
+
+          <div className="max-w-84 mx-auto w-full text-center text-base font-bold">
+            {determineMyMessage()}
+          </div>
+
+          {reactionTimes
+            .filter(
+              ([playerID, reactionTime]) =>
+                reactionTime === -1 && playerID !== myPlayerID,
+            )
+            .map(([playerID]) => (
+              <div
+                key={playerID}
+                className="max-w-84 mx-auto w-full text-center text-base font-bold"
+              >
+                {displayName(playerID)} reacted too early!
+              </div>
+            ))}
+
+          {reactionTimes
+            .filter(
+              ([playerID, reactionTime]) =>
+                reactionTime === 0 && playerID !== myPlayerID,
+            )
+            .map(([playerID]) => (
+              <div
+                key={playerID}
+                className="max-w-84 mx-auto w-full text-center text-base font-bold"
+              >
+                {displayName(playerID)} didn't react!
+              </div>
+            ))}
+
+          {reactionTimes
+            .filter(
+              ([playerID, reactionTime]) =>
+                reactionTime > 0 && playerID !== myPlayerID,
+            )
+            .map(([playerID, reactionTime]) => (
+              <div
+                key={playerID}
+                className="max-w-84 mx-auto w-full text-center text-base font-bold"
+              >
+                {displayName(playerID)} reacted in {reactionTime}ms.
+              </div>
+            ))}
+        </div>
+      );
+    }
+  }
+
   if (
     reactionTimes.some(([, time]) => time === -1) ||
     (reactionTimes.every(([, time]) => time === 0) && hasRoundEnded)
@@ -199,10 +293,6 @@ const ReactionTimes = ({
     );
   }
 
-  const myReactionTime = reactionTimes.find(
-    ([playerID]) => playerID === myPlayerID,
-  )?.[1];
-
   return (
     <div className="mt-6 w-full ">
       <div className="mx-auto max-w-72 text-center text-3xl font-bold">
@@ -212,8 +302,7 @@ const ReactionTimes = ({
       <div className="max-w-84 mx-auto w-full text-center text-base font-bold">
         {myReactionTime !== 0 ? (
           <>
-            You reacted in{" "}
-            {reactionTimes.find(([playerID]) => playerID === myPlayerID)?.[1]}
+            You reacted in {myReactionTime}
             ms.
           </>
         ) : (
@@ -228,12 +317,14 @@ const ReactionTimes = ({
             key={playerID}
             className="max-w-84 mx-auto w-full text-center text-base font-bold"
           >
-            {reactionTime !== 0 ? (
+            {reactionTime > 0 ? (
               <>
                 {displayName(playerID)} reacted in {reactionTime}ms.
               </>
+            ) : reactionTime === -1 ? (
+              <>{displayName(playerID)} reacted too early!</>
             ) : (
-              `${displayName(playerID)} didn't react!`
+              <>{displayName(playerID)} didn't react!</>
             )}
           </div>
         ))}

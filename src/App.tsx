@@ -24,7 +24,6 @@ function App() {
   const screen = useGameStore((state) => state.game.screen);
 
   return screens[screen];
-  // return <TapRaceIntro />;
 }
 
 export default App;

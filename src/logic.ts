@@ -34,7 +34,6 @@ export interface GameState {
 
   // Tug-a-tap related properties
   clicks: Record<PlayerId, number>;
-  clicksPercentage: Record<PlayerId, number>;
 
   // Tap race related properties
   playerDistances: Record<PlayerId, number>;
@@ -57,6 +56,7 @@ export interface GameState {
 
 type GameActions = {
   castVote: (gameMode: GameMode) => void;
+  clearReadyPlayers: () => void;
   click: () => void;
   raceTap: () => void;
   reactTap: () => void;
@@ -128,17 +128,17 @@ const determineGameMode = (game: GameState) => {
 
 // TUG-A-TAP RELATED FUNCTIONS
 const tugATapUpdate = (game: GameState) => {
-  const clickDifference =
-    game.clicks[game.playerIds[0]] - game.clicks[game.playerIds[1]];
-  const scalingFactor = 5; // Adjust this value as needed
-  game.clicksPercentage[game.playerIds[0]] = Math.max(
-    0,
-    Math.min(50 + clickDifference * scalingFactor, 100),
-  );
-  game.clicksPercentage[game.playerIds[1]] = Math.max(
-    0,
-    100 - game.clicksPercentage[game.playerIds[0]],
-  );
+  // const clickDifference =
+  //   game.clicks[game.playerIds[0]] - game.clicks[game.playerIds[1]];
+  // const scalingFactor = 5; // Adjust this value as needed
+  // game.clicksPercentage[game.playerIds[0]] = Math.max(
+  //   0,
+  //   Math.min(50 + clickDifference * scalingFactor, 100),
+  // );
+  // game.clicksPercentage[game.playerIds[1]] = Math.max(
+  //   0,
+  //   100 - game.clicksPercentage[game.playerIds[0]],
+  // );
 };
 // END OF TUG-A-TAP RELATED FUNCTIONS
 
@@ -165,6 +165,16 @@ const newReactTapRound = (game: GameState) => {
       minimizePopUp: true,
     });
 
+    // If everyone has the same number of wins, it's a tie
+    if (
+      Object.values(playerWins).every(
+        (wins) => wins === playerWins[game.playerIds[0]],
+      )
+    ) {
+      game.winner = null;
+      return;
+    }
+
     game.winner = Object.entries(playerWins).reduce(
       (acc, [playerId, wins]) => {
         if (wins > acc.wins) {
@@ -175,6 +185,7 @@ const newReactTapRound = (game: GameState) => {
       },
       { playerId: "", wins: 0 },
     ).playerId;
+
     game.gameOver = true;
     game.hasRoundEnded = false;
     return;
@@ -235,7 +246,6 @@ const reactTapUpdate = (game: GameState) => {
     game.reactRoundsWins.push(fastestPlayerId);
     console.log(`Player ${fastestPlayerId} won the round`);
 
-    // FIX HERE!!!
     game.hasRoundEnded = true;
     game.timeBetweenRounds = TIME_BETWEEN_ROUNDS;
   }
@@ -263,13 +273,6 @@ Rune.initLogic({
         return acc;
       },
       {} as GameState["clicks"],
-    ),
-    clicksPercentage: allPlayerIds.reduce(
-      (acc, playerId) => {
-        acc[playerId] = 50;
-        return acc;
-      },
-      {} as GameState["clicksPercentage"],
     ),
 
     // Tap race related properties
@@ -332,9 +335,14 @@ Rune.initLogic({
         const maxVotes = Math.max(...votes);
 
         if (maxVotes === game.playerIds.length) {
+          game.readyPlayers = [];
           determineGameMode(game);
         }
       }
+    },
+
+    clearReadyPlayers: (_, { game }) => {
+      game.readyPlayers = [];
     },
 
     click: (_, { game, playerId }) => {
@@ -355,8 +363,22 @@ Rune.initLogic({
         game.winner = playerId;
 
         game.gameOver = true;
+        const allPlayerIds = game.playerIds
+          .filter((playerId) => playerId !== game.winner)
+          .reduce(
+            (acc, playerId) => {
+              acc[playerId] = "LOST";
+              return acc;
+            },
+            {} as Record<PlayerId, "LOST">,
+          );
+
         Rune.gameOver({
-          players: game.playerDistances,
+          players: {
+            [playerId]: "WON",
+            ...allPlayerIds,
+          },
+
           minimizePopUp: true,
         });
       }
@@ -373,18 +395,28 @@ Rune.initLogic({
       // Check if the player reacted too early using Rune.gameTime()
       if (time - game.roundTimeStart < game.timeBeforeTap) {
         // FIX HERE!!! SO IT WORKS FOR JUST NOT 2 PLAYERS
-        console.log("Player reacted too early");
         game.reactedPlayers.push(playerId);
         game.reactionTimes[playerId] = -1;
 
-        game.reactRoundsWins.push(
-          allPlayerIds.filter(
-            (playerId) => game.reactionTimes[playerId] !== -1,
-          )[0],
-        );
+        if (game.reactedPlayers.length === game.playerIds.length - 1) {
+          game.reactRoundsWins.push(
+            allPlayerIds.filter(
+              (playerId) => game.reactionTimes[playerId] !== -1,
+            )[0],
+          );
 
-        game.hasRoundEnded = true;
-        game.timeBetweenRounds = TIME_BETWEEN_ROUNDS;
+          game.hasRoundEnded = true;
+          game.timeBetweenRounds = TIME_BETWEEN_ROUNDS;
+        }
+
+        // game.reactRoundsWins.push(
+        //   allPlayerIds.filter(
+        //     (playerId) => game.reactionTimes[playerId] !== -1,
+        //   )[0],
+        // );
+
+        // game.hasRoundEnded = true;
+        // game.timeBetweenRounds = TIME_BETWEEN_ROUNDS;
         return;
       }
 
@@ -401,9 +433,13 @@ Rune.initLogic({
       // If all players have reacted, find the fastest reaction time
       if (game.reactedPlayers.length === game.playerIds.length) {
         game.canReactionTap = false;
+
+        const filteredReactionTimes = Object.values(game.reactionTimes).filter(
+          (reactionTime) => reactionTime > 0,
+        );
         // Find the player with the fastest reaction time and then append their id to reactRoundsWins
         const fastestReactionTime = Math.min(
-          ...Object.values(game.reactionTimes),
+          ...Object.values(filteredReactionTimes),
         );
 
         // Find all players with the fastest reaction time
@@ -433,6 +469,8 @@ Rune.initLogic({
       if (game.readyPlayers.length === game.playerIds.length) {
         console.log("All players ready, starting game...");
 
+        if (game.screen === "lobby") return;
+
         game.screen = game.gameMode as Screen;
 
         game.countdown = COUNTDOWN_TIME;
@@ -455,6 +493,8 @@ Rune.initLogic({
   },
   update: ({ game }) => {
     if (
+      (game.screen === "lobby" &&
+        game.readyPlayers.length < game.playerIds.length) ||
       game.screen === "tup-a-tap-intro" ||
       game.screen === "tap-race-intro" ||
       game.screen === "react-tap-intro" ||
@@ -483,23 +523,56 @@ Rune.initLogic({
     if (game.timer <= 0) {
       switch (game.screen) {
         case "lobby": {
+          game.readyPlayers = [];
           determineGameMode(game);
           break;
         }
         case "tug-a-tap": {
           game.gameOver = true;
-          Rune.gameOver({
-            players: {
-              [game.playerIds[0]]: game.clicks[game.playerIds[0]],
-              [game.playerIds[1]]: game.clicks[game.playerIds[1]],
+
+          // Check if all players have the same number of clicks
+          if (
+            Object.values(game.clicks).every(
+              (clicks) => clicks === game.clicks[game.playerIds[0]],
+            )
+          ) {
+            game.winner = null;
+            Rune.gameOver({
+              players: game.playerIds.reduce(
+                (acc, playerId) => {
+                  acc[playerId] = "TIE";
+                  return acc;
+                },
+                {} as Record<PlayerId, "TIE">,
+              ),
+              minimizePopUp: true,
+            });
+            return;
+          }
+
+          const players = game.playerIds.reduce(
+            (acc, playerId) => {
+              acc[playerId] = game.clicks[playerId];
+              return acc;
             },
+            {} as Record<PlayerId, number>,
+          );
+
+          Rune.gameOver({
+            players,
             minimizePopUp: true,
           });
 
-          game.winner =
-            game.clicks[game.playerIds[0]] > game.clicks[game.playerIds[1]]
-              ? game.playerIds[0]
-              : game.playerIds[1];
+          game.winner = Object.entries(players).reduce(
+            (acc, [playerId, clicks]) => {
+              if (clicks > acc.clicks) {
+                acc.playerId = playerId;
+                acc.clicks = clicks;
+              }
+              return acc;
+            },
+            { playerId: "", clicks: 0 },
+          ).playerId;
           break;
         }
 
@@ -574,22 +647,26 @@ Rune.initLogic({
       }
     }
   },
-  updatesPerSecond: 10,
+  updatesPerSecond: 30,
   events: {
     playerJoined(playerId, { game }) {
       game.playerIds.push(playerId);
       game.clicks[playerId] = 0;
-      game.clicksPercentage[playerId] = 0;
       game.playerDistances[playerId] = 0;
       game.reactionTimes[playerId] = 0;
+
+      if (game.screen === "lobby") {
+        game.readyPlayers.push(playerId);
+      }
     },
     playerLeft(playerId, { game }) {
       const playerIndex = game.playerIds.indexOf(playerId);
       game.playerIds.splice(playerIndex, 1);
       delete game.clicks[playerId];
-      delete game.clicksPercentage[playerId];
       delete game.playerDistances[playerId];
       delete game.reactionTimes[playerId];
+
+      game.readyPlayers = game.readyPlayers.filter((id) => id !== playerId);
 
       // From the game mode votes, remove the player's vote
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

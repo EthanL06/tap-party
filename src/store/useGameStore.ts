@@ -22,7 +22,6 @@ export const useGameStore = create<GameStore>()(
       readyPlayers: [],
 
       clicks: {},
-      clicksPercentage: {},
 
       playerDistances: {},
 

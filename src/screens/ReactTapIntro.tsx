@@ -4,8 +4,6 @@ import StylizedButton from "../components/StylizedButton";
 import { useGameStore } from "../store/useGameStore";
 import clickSound from "../assets/click.mp3";
 import selectSound from "../assets/select.wav";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
 import useSound from "use-sound";
 import { cn } from "../lib/utils";
 

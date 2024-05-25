@@ -11,12 +11,27 @@ const StickmanTug = () => {
 
   const gameOver = useGameStore((state) => state.game.gameOver);
   const yourClicks = useGameStore((state) => state.game.clicks[state.playerID]);
-  const yourClicksPercentage = useGameStore(
-    (state) => state.game.clicksPercentage[state.playerID],
+
+  const playerId = useGameStore((state) => state.playerID);
+  const winner = useGameStore((state) => state.game.winner);
+
+  const greatestOpponentClicks = useGameStore((state) =>
+    Math.max(
+      ...state.game.playerIds
+        .filter((id) => id !== state.playerID)
+        .map((id) => state.game.clicks[id]),
+    ),
   );
-  const opponentClicksPercentage = 100 - yourClicksPercentage;
-  const didPlayerWin =
-    gameOver && yourClicksPercentage > opponentClicksPercentage;
+
+  const clickDifference = yourClicks - greatestOpponentClicks;
+  const scalingFactor = 5;
+  const yourClicksPercentage = Math.max(
+    0,
+    Math.min(50 + clickDifference * scalingFactor, 100),
+  );
+  const opponentClicksPercentage = Math.max(0, 100 - yourClicksPercentage);
+
+  const didPlayerWin = gameOver && winner != null && winner === playerId;
 
   useEffect(() => {
     if (yourClicks > prevYourClicksRef.current && yourClicksPercentage == 100) {
@@ -34,11 +49,11 @@ const StickmanTug = () => {
 
   const determineImage = () => {
     if (gameOver) {
+      if (didPlayerWin) return stickmanHappy;
+
       if (yourClicksPercentage === 50) return stickman;
 
-      return yourClicksPercentage > opponentClicksPercentage
-        ? stickmanHappy
-        : stickmanSad;
+      return stickmanSad;
     }
 
     return yourClicksPercentage > opponentClicksPercentage
@@ -49,7 +64,7 @@ const StickmanTug = () => {
   return (
     <div
       className={cn(
-        "relative mb-12 flex w-full rounded-full   border-black p-1 transition-all",
+        "relative mb-28 flex w-full rounded-full   border-black p-1 transition-all",
       )}
     >
       <HalfwayLine />
