@@ -2,8 +2,13 @@ import Board from "../components/Board";
 import StylizedButton from "../components/StylizedButton";
 import Timer from "../components/Timer";
 import { useGameStore } from "../store/useGameStore";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+import useSound from "use-sound";
+import selectSound from "../assets/select.wav";
 
 const Lobby = () => {
+  const [play] = useSound(selectSound);
   const gameModeVotes = useGameStore((state) => state.game.gameModeVotes);
 
   return (
@@ -27,6 +32,7 @@ const Lobby = () => {
           <div className="drop-in-2 animate-delay-600 relative opacity-0">
             <StylizedButton
               onClick={() => {
+                play();
                 Rune.actions.castVote("tug-a-tap");
               }}
               className="relative z-10"
@@ -59,6 +65,7 @@ const Lobby = () => {
           <div className="drop-in-2 animate-delay-1100 opacity-0">
             <StylizedButton
               onClick={() => {
+                play();
                 Rune.actions.castVote("tap-race");
               }}
               className="relative w-full"
@@ -90,6 +97,7 @@ const Lobby = () => {
           <div className="drop-in-2 animate-delay-1600 opacity-0">
             <StylizedButton
               onClick={() => {
+                play();
                 Rune.actions.castVote("react-tap");
               }}
               className="relative w-full"

@@ -94,6 +94,8 @@ const ReactTap = () => {
           }
           showIcon={canReactionTap || gameOver}
           onClick={() => {
+            if (hasRoundEnded) return;
+
             Rune.actions.reactTap();
           }}
           onTouchStart={() => {

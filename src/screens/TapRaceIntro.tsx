@@ -1,24 +1,21 @@
 import Board from "../components/Board";
-import tapImage from "../assets/tap.svg";
+import stickmanImage from "../assets/stickman.svg";
 import StylizedButton from "../components/StylizedButton";
 import { useGameStore } from "../store/useGameStore";
-import clickSound from "../assets/click.mp3";
-import selectSound from "../assets/select.wav";
+import clickSound from "../assets/select.wav";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
 import useSound from "use-sound";
 import { cn } from "../lib/utils";
-
-const ReactTapIntro = () => {
-  const [playClick] = useSound(clickSound);
-  const [playSelect] = useSound(selectSound);
+const TapRaceIntro = () => {
+  const [play] = useSound(clickSound);
   const readyPlayers = useGameStore((state) => state.game.readyPlayers);
   const playerID = useGameStore((state) => state.playerID);
 
   return (
     <div className="relative flex h-full min-h-screen flex-col">
       <div className="drop-in relative mt-4 w-full space-y-2 px-4">
-        <Board>REACT TAP!</Board>
+        <Board>TAP RACE!</Board>
       </div>
 
       <div className="fade-in mt-4 px-4">
@@ -27,52 +24,45 @@ const ReactTapIntro = () => {
         </div>
 
         <ul className="list-['-_'] px-4 text-base font-black">
+          <li>Race to get to the end of the track!</li>
           <li>
-            Tap the button when{" "}
-            <img className="inline-block size-6" src={tapImage} /> appears!
-          </li>
-          <li>
-            After the{" "}
+            Alternate tapping between{" "}
             <button
               onClick={() => {
-                playClick();
+                play();
               }}
-              className="stylized-shadow inline-block rounded-full transition-all active:translate-y-1 active:scale-90 active:shadow-none"
+              className="stylized-shadow inline-block rounded border-[3px] border-black px-1.5 transition-all active:translate-y-1 active:scale-90 active:shadow-none"
             >
-              <img
-                className="inline-block size-8 rounded-full border-2 border-black p-1"
-                src={tapImage}
-              />
+              <div className={"pt-0.5 text-center text-[1.2rem] font-black"}>
+                L
+              </div>
             </button>{" "}
-            appears, you have 5 seconds to tap the button.
-          </li>
-          <li>
-            You <span className="underline">lose</span> the round if you tap{" "}
+            and{" "}
             <button
               onClick={() => {
-                playClick();
+                play();
               }}
-              className="stylized-shadow inline-block rounded-full transition-all active:translate-y-1 active:scale-90 active:shadow-none"
+              className="stylized-shadow inline-block rounded border-[3px] border-black px-1.5 transition-all active:translate-y-1 active:scale-90 active:shadow-none"
             >
-              <img
-                className="inline-block size-8 rounded-full border-2 border-black p-1"
-                src={tapImage}
-              />
+              <div className={"pt-0.5 text-center text-[1.2rem] font-black"}>
+                R
+              </div>
             </button>{" "}
-            too early or don't tap at all.
+            to move your
+            <img className="inline-block size-8" src={stickmanImage} />
+            forward.
           </li>
-          <li>The player with the fastest reaction time wins the round!</li>
-          <li>There are a total of 9 rounds.</li>
-          <li className="ml-4">
-            A won round is{" "}
-            <div className="outline-3 ml-0.5 inline-block size-3 rounded-full bg-emerald-500 outline outline-black"></div>{" "}
-            .
+          <li>
+            Your
+            <img className="inline-block size-8" src={stickmanImage} />
+            will always be on the top track.
           </li>
-          <li className="ml-4">
-            A lost round is{" "}
-            <div className="outline-3 ml-0.5 inline-block size-3 rounded-full bg-red-500 outline outline-black"></div>{" "}
-            .
+
+          <li>
+            The race lasts for{" "}
+            <span className="underline underline-offset-2">60 seconds</span>.{" "}
           </li>
+          <li>The first player to reach the end of the track wins!</li>
         </ul>
       </div>
 
@@ -90,6 +80,7 @@ const ReactTapIntro = () => {
 
             <div className="size-8" />
           </div>
+
           <div className="drop-in-from-bottom  opacity-0">
             <StylizedButton
               className={cn(
@@ -97,7 +88,7 @@ const ReactTapIntro = () => {
                 readyPlayers.includes(playerID) && "opacity-50",
               )}
               onClick={() => {
-                playSelect();
+                play();
                 Rune.actions.setPlayerReady();
               }}
               disabled={readyPlayers.includes(playerID)}
@@ -111,4 +102,4 @@ const ReactTapIntro = () => {
   );
 };
 
-export default ReactTapIntro;
+export default TapRaceIntro;

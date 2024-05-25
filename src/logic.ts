@@ -1,17 +1,19 @@
 import type { PlayerId, RuneClient } from "rune-games-sdk";
 import {
   COUNTDOWN_TIME,
-  GAME_TIME,
+  TUG_A_TAP_GAME_TIME,
   LOBBY_TIME,
   TIME_BETWEEN_ROUNDS,
   TOTAL_REACT_TAP_ROUNDS,
   UPDATE_INTERVAL,
+  TAP_RACE_GAME_TIME,
 } from "./lib/constants";
 
 export type Screen =
   | "lobby"
-  | "tug-a-tap"
   | "tup-a-tap-intro"
+  | "tug-a-tap"
+  | "tap-race-intro"
   | "tap-race"
   | "react-tap-intro"
   | "react-tap";
@@ -34,6 +36,9 @@ export interface GameState {
   clicks: Record<PlayerId, number>;
   clicksPercentage: Record<PlayerId, number>;
 
+  // Tap race related properties
+  playerDistances: Record<PlayerId, number>;
+
   // React tap related properties
   reactionTimes: Record<PlayerId, number>;
   reactedPlayers: PlayerId[];
@@ -53,6 +58,7 @@ export interface GameState {
 type GameActions = {
   castVote: (gameMode: GameMode) => void;
   click: () => void;
+  raceTap: () => void;
   reactTap: () => void;
   setPlayerReady: () => boolean;
   setScreen: (screen: Screen) => void;
@@ -65,14 +71,23 @@ declare global {
 // LOBBY RELATED FUNCTIONS
 const gameModeToScreenIntro: Record<GameMode, Screen> = {
   "tug-a-tap": "tup-a-tap-intro",
-  "tap-race": "tap-race",
+  "tap-race": "tap-race-intro",
   "react-tap": "react-tap-intro",
 };
 
-const selectRandomGameMode = (gameModes: string[]): Screen => {
+const selectRandomGameMode = (
+  gameModes: string[],
+): {
+  gameMode: GameMode;
+  screen: Screen;
+} => {
   const randomIndex = Math.floor(Math.random() * gameModes.length);
-  const randomGameMode = gameModes[randomIndex];
-  return gameModeToScreenIntro[randomGameMode as GameMode];
+  const randomGameMode = gameModes[randomIndex] as GameMode;
+
+  return {
+    gameMode: randomGameMode,
+    screen: gameModeToScreenIntro[randomGameMode as GameMode],
+  };
 };
 
 const determineGameMode = (game: GameState) => {
@@ -90,14 +105,24 @@ const determineGameMode = (game: GameState) => {
     ({ voteCount }) => voteCount === maxVotes,
   );
 
-  game.timer = GAME_TIME;
-  game.screen =
-    tiedGameModes.length > 1
-      ? selectRandomGameMode(tiedGameModes.map(({ gameMode }) => gameMode))
-      : (gameModeToScreenIntro[
-          tiedGameModes[0].gameMode as GameMode
-        ] as Screen);
-  game.gameMode = tiedGameModes[0].gameMode as GameMode;
+  if (tiedGameModes.length === 1) {
+    game.gameMode = tiedGameModes[0].gameMode as GameMode;
+    game.timer =
+      tiedGameModes[0].gameMode === "tug-a-tap"
+        ? TUG_A_TAP_GAME_TIME
+        : TAP_RACE_GAME_TIME;
+    game.screen = gameModeToScreenIntro[tiedGameModes[0].gameMode as GameMode];
+    return;
+  }
+
+  const { gameMode: randomGameMode, screen } = selectRandomGameMode(
+    tiedGameModes.map(({ gameMode }) => gameMode),
+  );
+
+  game.timer =
+    randomGameMode === "tug-a-tap" ? TUG_A_TAP_GAME_TIME : TAP_RACE_GAME_TIME;
+  game.screen = screen;
+  game.gameMode = randomGameMode;
 };
 // END OF LOBBY RELATED FUNCTIONS
 
@@ -247,6 +272,15 @@ Rune.initLogic({
       {} as GameState["clicksPercentage"],
     ),
 
+    // Tap race related properties
+    playerDistances: allPlayerIds.reduce(
+      (acc, playerId) => {
+        acc[playerId] = 0;
+        return acc;
+      },
+      {} as GameState["playerDistances"],
+    ),
+
     // React tap related properties
     reactRoundsWins: [],
     reactedPlayers: [],
@@ -307,8 +341,34 @@ Rune.initLogic({
       game.clicks[playerId]++;
     },
 
-    reactTap: (_, { game, playerId, allPlayerIds }) => {
+    raceTap: (_, { game, playerId }) => {
       if (game.gameOver) return;
+
+      console.log(`Player ${playerId} tapped!`);
+
+      const playerDistances = game.playerDistances;
+      const distance = playerDistances[playerId] + 1;
+      playerDistances[playerId] = Math.min(distance, 95);
+      game.playerDistances = playerDistances;
+
+      if (distance >= 95) {
+        game.winner = playerId;
+
+        game.gameOver = true;
+        Rune.gameOver({
+          players: game.playerDistances,
+          minimizePopUp: true,
+        });
+      }
+    },
+
+    reactTap: (_, { game, playerId, allPlayerIds }) => {
+      if (
+        game.gameOver ||
+        game.hasRoundEnded ||
+        game.reactedPlayers.includes(playerId)
+      )
+        return;
       const time = Rune.gameTime();
       // Check if the player reacted too early using Rune.gameTime()
       if (time - game.roundTimeStart < game.timeBeforeTap) {
@@ -348,18 +408,15 @@ Rune.initLogic({
 
         // Find all players with the fastest reaction time
         const fastestPlayers = Object.entries(game.reactionTimes)
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           .filter(([_, reactionTime]) => reactionTime === fastestReactionTime)
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           .map(([playerId, _]) => playerId);
 
         // Randomly select one of the fastest players
         const fastestPlayerId = fastestPlayers[
           Math.floor(Math.random() * fastestPlayers.length)
         ] as PlayerId;
-
-        // const fastestPlayerId = Object.entries(game.reactionTimes).find(
-        //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        //   ([_, reactionTime]) => reactionTime === fastestReactionTime,
-        // )![0] as PlayerId;
 
         game.reactRoundsWins.push(fastestPlayerId);
         console.log(`Player ${fastestPlayerId} won the round`);
@@ -381,10 +438,11 @@ Rune.initLogic({
         game.countdown = COUNTDOWN_TIME;
         switch (game.gameMode) {
           case "tug-a-tap": {
-            game.timer = GAME_TIME;
+            game.timer = TUG_A_TAP_GAME_TIME;
             break;
           }
-          case "react-tap": {
+          case "tap-race": {
+            game.timer = TAP_RACE_GAME_TIME;
             break;
           }
         }
@@ -398,6 +456,7 @@ Rune.initLogic({
   update: ({ game }) => {
     if (
       game.screen === "tup-a-tap-intro" ||
+      game.screen === "tap-race-intro" ||
       game.screen === "react-tap-intro" ||
       game.gameOver
     )
@@ -427,7 +486,7 @@ Rune.initLogic({
           determineGameMode(game);
           break;
         }
-        case "tug-a-tap":
+        case "tug-a-tap": {
           game.gameOver = true;
           Rune.gameOver({
             players: {
@@ -436,11 +495,45 @@ Rune.initLogic({
             },
             minimizePopUp: true,
           });
+
           game.winner =
             game.clicks[game.playerIds[0]] > game.clicks[game.playerIds[1]]
               ? game.playerIds[0]
               : game.playerIds[1];
           break;
+        }
+
+        case "tap-race": {
+          game.gameOver = true;
+          // Find player with the highest distance
+          const playerDistances = game.playerDistances;
+          const maxDistance = Math.max(...Object.values(playerDistances));
+          const winner = Object.entries(playerDistances).find(
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            ([_, distance]) => distance === maxDistance,
+          )![0] as PlayerId;
+
+          const losers = game.playerIds
+            .filter((playerId) => playerId !== winner)
+            .reduce(
+              (acc, playerId) => {
+                acc[playerId] = "LOST";
+                return acc;
+              },
+              {} as Record<PlayerId, "LOST">,
+            );
+
+          game.winner = winner;
+
+          Rune.gameOver({
+            players: {
+              [winner]: "WON",
+              ...losers,
+            },
+            minimizePopUp: true,
+          });
+          break;
+        }
       }
     }
 
@@ -470,6 +563,11 @@ Rune.initLogic({
         break;
       }
 
+      case "tap-race": {
+        game.timer -= UPDATE_INTERVAL;
+        break;
+      }
+
       case "react-tap": {
         reactTapUpdate(game);
         break;
@@ -482,12 +580,16 @@ Rune.initLogic({
       game.playerIds.push(playerId);
       game.clicks[playerId] = 0;
       game.clicksPercentage[playerId] = 0;
+      game.playerDistances[playerId] = 0;
+      game.reactionTimes[playerId] = 0;
     },
     playerLeft(playerId, { game }) {
       const playerIndex = game.playerIds.indexOf(playerId);
       game.playerIds.splice(playerIndex, 1);
       delete game.clicks[playerId];
       delete game.clicksPercentage[playerId];
+      delete game.playerDistances[playerId];
+      delete game.reactionTimes[playerId];
 
       // From the game mode votes, remove the player's vote
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

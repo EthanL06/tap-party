@@ -4,7 +4,14 @@ import stickmanImage from "../assets/stickman.svg";
 import StylizedButton from "../components/StylizedButton";
 import { useGameStore } from "../store/useGameStore";
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+import useSound from "use-sound";
+import clickSound from "../assets/click.mp3";
+import { cn } from "../lib/utils";
+
 const TugATapIntro = () => {
+  const [playClick] = useSound(clickSound);
   const readyPlayers = useGameStore((state) => state.game.readyPlayers);
   const playerID = useGameStore((state) => state.playerID);
 
@@ -22,7 +29,10 @@ const TugATapIntro = () => {
         <ul className="list-['-_'] px-4 text-base font-black">
           <li>
             Tap the{" "}
-            <button className="stylized-shadow inline-block rounded-full transition-all active:translate-y-1 active:scale-90 active:shadow-none">
+            <button
+              onClick={playClick}
+              className="stylized-shadow inline-block rounded-full transition-all active:translate-y-1 active:scale-90 active:shadow-none"
+            >
               <img
                 className="inline-block size-8 rounded-full border-2 border-black p-1"
                 src={tapImage}
@@ -76,7 +86,10 @@ const TugATapIntro = () => {
 
           <div className="drop-in-from-bottom  opacity-0">
             <StylizedButton
-              className="px-8"
+              className={cn(
+                "px-8",
+                readyPlayers.includes(playerID) && "opacity-50",
+              )}
               onClick={() => {
                 Rune.actions.setPlayerReady();
               }}

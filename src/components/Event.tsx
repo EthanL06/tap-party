@@ -14,7 +14,7 @@ const Event = () => {
     if (countdown === 1) {
       setIsFading(true);
     }
-  }, [countdown, messages.length]);
+  }, [countdown]);
 
   if (countdown <= 0 || gameStart) return null;
 

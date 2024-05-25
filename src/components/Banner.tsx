@@ -10,45 +10,26 @@ const Banner = () => {
   const yourClicksPercentage = useGameStore(
     (state) => state.game.clicksPercentage[state.playerID],
   );
-  const reactRoundWins = useGameStore((state) => state.game.reactRoundsWins);
-  const playerID = useGameStore((state) => state.playerID);
 
+  const playerID = useGameStore((state) => state.playerID);
+  const winner = useGameStore((state) => state.game.winner);
   if (!gameOver) return null;
 
   const determineFlag = () => {
     switch (screen) {
       case "tug-a-tap": {
-        const opponentClicksPercentage = 100 - yourClicksPercentage;
-
         if (yourClicksPercentage === 50) return bannerTied;
-
-        return yourClicksPercentage > opponentClicksPercentage
-          ? bannerWinner
-          : bannerLoser;
+        return winner === playerID ? bannerWinner : bannerLoser;
       }
-
-      case "react-tap": {
-        // Get wins of every player
-        const wins: { [key: string]: number } = reactRoundWins.reduce(
-          (acc, curr) => {
-            acc[curr] = (acc[curr] || 0) + 1;
-            return acc;
-          },
-          {} as { [key: string]: number },
-        );
-
-        // Sort wins in descending order
-        const sortedWins = Object.entries(wins).sort((a, b) => b[1] - a[1]);
-
-        // If the first player is the current player, return the winner banner
-        if (sortedWins[0][0] === playerID) return bannerWinner;
-        return bannerLoser;
+      case "react-tap":
+      case "tap-race": {
+        return winner === playerID ? bannerWinner : bannerLoser;
       }
     }
   };
 
   return (
-    <div className="banner-animation relative -top-[7rem]">
+    <div className="banner-animation relative -top-[8rem]">
       <img
         src={determineFlag()}
         alt="banner"
