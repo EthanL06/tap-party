@@ -3,7 +3,6 @@ import StylizedButton from "../components/StylizedButton";
 import Timer from "../components/Timer";
 import { useGameStore } from "../store/useGameStore";
 import useSound from "use-sound";
-import selectSound from "../assets/select.wav";
 import lobbyMusic from "../assets/sfx/Lobby_music.mp3";
 import { useEffect } from "react";
 import { useAudioStore } from "../store/useAudioStore";
@@ -11,12 +10,16 @@ import Ready from "../components/Ready";
 import { cn } from "../lib/utils";
 
 const Lobby = () => {
-  const [playLobbyMusic, { stop: stopLobbyMusic }] = useSound(lobbyMusic, {
-    volume: 0.3,
-    loop: true,
-  });
+  const [playLobbyMusic, { sound, stop: stopLobbyMusic }] = useSound(
+    lobbyMusic,
+    {
+      volume: 0.5,
+      loop: true,
+    },
+  );
 
-  const [play] = useSound(selectSound);
+  const play = useAudioStore((state) => state.playSelect);
+
   const gameModeVotes = useGameStore((state) => state.game.gameModeVotes);
   const readyPlayers = useGameStore((state) => state.game.readyPlayers.length);
   const totalPlayers = useGameStore((state) => state.game.playerIds.length);
@@ -30,8 +33,11 @@ const Lobby = () => {
   useEffect(() => {
     if (readyPlayers === totalPlayers && totalPlayers > 0) {
       playLobbyMusic();
+      if (sound) {
+        sound.fade(0, 0.5, 3000);
+      }
     }
-  }, [playLobbyMusic, readyPlayers, totalPlayers]);
+  }, [playLobbyMusic, readyPlayers, totalPlayers, sound]);
 
   return (
     <div className="relative flex h-full min-h-screen flex-col items-center justify-around">
@@ -57,6 +63,7 @@ const Lobby = () => {
                 <StylizedButton
                   onClick={() => {
                     play();
+                    Rune.actions.incrementTap();
                     Rune.actions.castVote("tug-a-tap");
                   }}
                   className={cn("relative z-10")}
@@ -91,6 +98,7 @@ const Lobby = () => {
                   onClick={() => {
                     play();
                     Rune.actions.castVote("tap-race");
+                    Rune.actions.incrementTap();
                   }}
                   className="relative w-full"
                 >
@@ -123,6 +131,7 @@ const Lobby = () => {
                   onClick={() => {
                     play();
                     Rune.actions.castVote("react-tap");
+                    Rune.actions.incrementTap();
                   }}
                   className="relative w-full"
                 >

@@ -1,8 +1,7 @@
 import { ButtonHTMLAttributes, useState } from "react";
-import useSound from "use-sound";
 import { cn } from "../lib/utils";
-import clickAudioSound from "../assets/click.mp3";
 import tap from "../assets/tap.svg";
+import { useAudioStore } from "../store/useAudioStore";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   showIcon?: boolean;
@@ -10,7 +9,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const Button = ({ showIcon = true, className, ...props }: ButtonProps) => {
-  const [play] = useSound(clickAudioSound);
+  const play = useAudioStore((state) => state.playClick);
   const [divs, setDivs] = useState<number[]>([]);
 
   const handleClick = () => {

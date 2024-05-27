@@ -25,10 +25,11 @@ const StickmanTug = () => {
 
   const clickDifference = yourClicks - greatestOpponentClicks;
   const scalingFactor = 5;
-  const yourClicksPercentage = Math.max(
-    0,
-    Math.min(50 + clickDifference * scalingFactor, 100),
-  );
+  const yourClicksPercentage =
+    playerId != null
+      ? Math.max(0, Math.min(50 + clickDifference * scalingFactor, 100))
+      : 50;
+
   const opponentClicksPercentage = Math.max(0, 100 - yourClicksPercentage);
 
   const didPlayerWin = gameOver && winner != null && winner === playerId;

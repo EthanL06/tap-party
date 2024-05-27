@@ -2,11 +2,11 @@ import Board from "../components/Board";
 import stickmanImage from "../assets/stickman.svg";
 import StylizedButton from "../components/StylizedButton";
 import { useGameStore } from "../store/useGameStore";
-import clickSound from "../assets/select.wav";
-import useSound from "use-sound";
 import { cn } from "../lib/utils";
+import { useAudioStore } from "../store/useAudioStore";
 const TapRaceIntro = () => {
-  const [play] = useSound(clickSound);
+  const play = useAudioStore((state) => state.playClick);
+
   const readyPlayers = useGameStore((state) => state.game.readyPlayers);
   const playerID = useGameStore((state) => state.playerID);
 
@@ -22,11 +22,12 @@ const TapRaceIntro = () => {
         </div>
 
         <ul className="list-['-_'] px-4 text-base font-black">
-          <li>Race to get to the end of the track!</li>
+          <li>Race to the end of the track!</li>
           <li>
             Alternate tapping between{" "}
             <button
               onClick={() => {
+                Rune.actions.incrementTap();
                 play();
               }}
               className="stylized-shadow inline-block rounded border-[3px] border-black px-1.5 transition-all active:translate-y-1 active:scale-90 active:shadow-none"
@@ -38,6 +39,7 @@ const TapRaceIntro = () => {
             and{" "}
             <button
               onClick={() => {
+                Rune.actions.incrementTap();
                 play();
               }}
               className="stylized-shadow inline-block rounded border-[3px] border-black px-1.5 transition-all active:translate-y-1 active:scale-90 active:shadow-none"
@@ -88,6 +90,7 @@ const TapRaceIntro = () => {
               onClick={() => {
                 play();
                 Rune.actions.setPlayerReady();
+                Rune.actions.incrementTap();
               }}
               disabled={readyPlayers.includes(playerID)}
             >

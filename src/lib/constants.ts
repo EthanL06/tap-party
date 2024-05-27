@@ -3,6 +3,9 @@ export const LOBBY_TIME = 25 * 1000;
 export const TUG_A_TAP_GAME_TIME = 30 * 1000;
 export const TAP_RACE_GAME_TIME = 60 * 1000;
 
+export const STEP_DISTANCE = 0.5;
+export const MAX_DISTANCE = 95;
+
 export const COUNTDOWN_TIME = 5 * 1000;
 export const TIME_BETWEEN_ROUNDS = 5 * 1000;
 

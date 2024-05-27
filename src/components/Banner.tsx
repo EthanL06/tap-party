@@ -4,6 +4,9 @@ import bannerTied from "../assets/banner_tied.png";
 import { useGameStore } from "../store/useGameStore";
 import { cn } from "../lib/utils";
 
+import { useEffect, useState } from "react";
+import { useAudioStore } from "../store/useAudioStore";
+
 const Banner = () => {
   const screen = useGameStore((state) => state.game.screen);
   const gameOver = useGameStore((state) => state.game.gameOver);
@@ -14,24 +17,72 @@ const Banner = () => {
 
   const allClicks = useGameStore((state) => state.game.clicks);
 
-  if (!gameOver) return null;
+  const playWin = useAudioStore((state) => state.playWin);
+  const playLose = useAudioStore((state) => state.playLose);
+
+  const [isPlaying, setIsPlaying] = useState(false);
+  useEffect(() => {
+    if (isPlaying) {
+      setTimeout(() => {
+        Rune.showGameOverPopUp();
+      }, 3000);
+    }
+  }, [isPlaying]);
+
+  if (!gameOver || playerID == undefined) return null;
 
   const determineFlag = () => {
     switch (screen) {
       case "tug-a-tap": {
+        if (winner === playerID) {
+          if (!isPlaying) {
+            playWin();
+            setIsPlaying(true);
+          }
+          return bannerWinner;
+        }
+
         if (
           Object.values(allClicks).every(
             (clicks) => clicks === allClicks[playerIDs[0]],
           )
-        )
+        ) {
+          if (!isPlaying) {
+            playLose();
+            setIsPlaying(true);
+          }
           return bannerTied;
-        return winner === playerID ? bannerWinner : bannerLoser;
+        }
+
+        if (!isPlaying) {
+          playLose();
+          setIsPlaying(true);
+        }
+        return bannerLoser;
       }
       case "react-tap":
       case "tap-race": {
-        if (winner === null) return bannerTied;
+        if (winner === null) {
+          if (!isPlaying) {
+            playLose();
+            setIsPlaying(true);
+          }
+          return bannerTied;
+        }
 
-        return winner === playerID ? bannerWinner : bannerLoser;
+        if (winner === playerID) {
+          if (!isPlaying) {
+            playWin();
+            setIsPlaying(true);
+          }
+          return bannerWinner;
+        }
+
+        if (!isPlaying) {
+          playLose();
+          setIsPlaying(true);
+        }
+        return bannerLoser;
       }
     }
   };

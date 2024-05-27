@@ -1,9 +1,10 @@
 import { create } from "zustand";
-import { GameState } from "../logic";
+import { GameState, Persisted } from "../logic";
 import { subscribeWithSelector } from "zustand/middleware";
+import { GameStateWithPersisted } from "rune-games-sdk";
 
 interface GameStore {
-  game: GameState;
+  game: GameStateWithPersisted<GameState, Persisted>;
   playerID: string;
 }
 
@@ -17,6 +18,7 @@ export const useGameStore = create<GameStore>()(
       gameStart: false,
       gameOver: false,
       winner: null,
+      persisted: {},
 
       playerIds: [],
       readyPlayers: [],

@@ -2,17 +2,96 @@ import { useState, useEffect } from "react";
 import Button from "./Button";
 import { useGameStore } from "../store/useGameStore";
 import { cn } from "../lib/utils";
+import StylizedButton from "./StylizedButton";
+import useSound from "use-sound";
+import selectSound from "../assets/select.wav";
+import clickSound from "../assets/click.mp3";
+import winSound from "../assets/sfx/game_win.mp3";
+import loseSound from "../assets/sfx/game_lose.mp3";
+import three from "../assets/sfx/3.wav";
+import two from "../assets/sfx/2.wav";
+import one from "../assets/sfx/1.wav";
+import go from "../assets/sfx/go.wav";
+import race from "../assets/sfx/race_music.mp3";
+import tugATap from "../assets/sfx/tow_song.mp3";
+import reactTap from "../assets/sfx/heartbeat.wav";
+
+import { useAudioStore } from "../store/useAudioStore";
 
 const Ready = () => {
   const readyPlayers = useGameStore((state) => state.game.readyPlayers);
   const totalPlayers = useGameStore((state) => state.game.playerIds.length);
   const playerID = useGameStore((state) => state.playerID);
+  const persistedData = useGameStore((state) => state.game.persisted)[playerID];
 
   const [fade, setFade] = useState(false);
   const [render, setRender] = useState(true);
+  const [showStats, setShowStats] = useState(false);
+
+  const [play] = useSound(selectSound);
+  const [playClick] = useSound(clickSound);
+  const [playWin] = useSound(winSound);
+  const [playLose] = useSound(loseSound);
+
+  const [playThree] = useSound(three);
+  const [playTwo] = useSound(two);
+  const [playOne] = useSound(one);
+  const [playGo] = useSound(go);
+
+  const [playRace, { sound: raceSound, stop: stopRaceSound }] = useSound(race, {
+    volume: 0.5,
+    loop: true,
+  });
+
+  const [playTugATap, { sound: tugATapSound }] = useSound(tugATap, {
+    volume: 0.5,
+  });
+
+  const [playReactTap, { sound: reactTapSound, stop: stopReactTapSound }] =
+    useSound(reactTap, {
+      loop: true,
+    });
 
   useEffect(() => {
-    if (readyPlayers.length === totalPlayers && totalPlayers > 1) {
+    useAudioStore.setState({
+      playSelect: play,
+      playClick: playClick,
+      playWin: playWin,
+      playLose: playLose,
+      playThree: playThree,
+      playTwo: playTwo,
+      playOne: playOne,
+      playGo: playGo,
+      playRace: playRace,
+      raceSound: raceSound,
+      stopRaceSound: stopRaceSound,
+      playTugATap: playTugATap,
+      tugATapSound: tugATapSound,
+      playReactTap: playReactTap,
+      reactTapSound: reactTapSound,
+      stopReactTapSound: stopReactTapSound,
+    });
+  }, [
+    play,
+    playClick,
+    playGo,
+    playLose,
+    playOne,
+    playRace,
+    playReactTap,
+    playThree,
+    playTugATap,
+    playTwo,
+    playWin,
+    raceSound,
+    reactTapSound,
+    stopRaceSound,
+    stopReactTapSound,
+    tugATapSound,
+  ]);
+
+  useEffect(() => {
+    if (readyPlayers.length === totalPlayers && totalPlayers >= 1) {
       setFade(true);
       setTimeout(() => {
         setRender(false);
@@ -28,7 +107,9 @@ const Ready = () => {
     <div
       className={`absolute z-[100] flex h-full w-full flex-col items-center justify-center bg-[#ffcb39]/85 ${fade ? "fade-away-no-delay" : ""}`}
     >
-      <div className="mb-3 text-4xl font-bold">Click to Ready</div>
+      <div className="mb-3 text-4xl font-bold">
+        {playerID != undefined ? "Click to Ready" : "Spectating..."}
+      </div>
 
       <Button
         className={cn(
@@ -38,11 +119,12 @@ const Ready = () => {
         disabled={readyPlayers.includes(playerID)}
         onClick={() => {
           Rune.actions.setPlayerReady();
+          Rune.actions.incrementTap();
         }}
       />
 
       <div
-        className="mt-4 
+        className="mt-2 
       flex w-full items-center justify-center gap-x-1"
       >
         {readyPlayers.map((playerId) => (
@@ -60,6 +142,59 @@ const Ready = () => {
           ),
         )}
       </div>
+
+      {totalPlayers === 1 ? (
+        <>
+          <div className="font-bold">You&apos;re all alone...</div>
+          <StylizedButton
+            className="w-full max-w-xs scale-75 active:scale-[0.70]"
+            onClick={() => {
+              play();
+              Rune.actions.incrementTap();
+              Rune.showInvitePlayers();
+            }}
+          >
+            Invite Friends
+          </StylizedButton>
+        </>
+      ) : (
+        <div className="mt-1 font-bold">
+          {readyPlayers.length}/{totalPlayers} players ready
+        </div>
+      )}
+
+      <StylizedButton
+        className="w-full max-w-xs scale-75 active:scale-[0.70]"
+        onClick={() => {
+          if (playerID === undefined) return;
+          Rune.actions.incrementTap();
+          play();
+          setShowStats(!showStats);
+        }}
+      >
+        {showStats ? "Hide Stats" : "View Stats"}
+      </StylizedButton>
+
+      {showStats && (
+        <div className="mx-auto mt-2 flex w-full max-w-xs justify-around">
+          <div className="flex flex-col items-center font-bold">
+            <div>Taps</div>
+            <div className="text-sm">{persistedData.taps.toLocaleString()}</div>
+          </div>
+
+          <div className="flex flex-col items-center font-bold">
+            <div>Wins</div>
+            <div className="text-sm">{persistedData.wins.toLocaleString()}</div>
+          </div>
+
+          <div className="flex flex-col items-center font-bold">
+            <div>Games</div>
+            <div className="text-sm">
+              {persistedData.totalGames.toLocaleString()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

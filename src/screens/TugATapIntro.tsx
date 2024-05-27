@@ -3,12 +3,12 @@ import tapImage from "../assets/tap.svg";
 import stickmanImage from "../assets/stickman.svg";
 import StylizedButton from "../components/StylizedButton";
 import { useGameStore } from "../store/useGameStore";
-import useSound from "use-sound";
-import selectSound from "../assets/select.wav";
 import { cn } from "../lib/utils";
+import { useAudioStore } from "../store/useAudioStore";
 
 const TugATapIntro = () => {
-  const [playClick] = useSound(selectSound);
+  const playSelect = useAudioStore((state) => state.playSelect);
+  const playClick = useAudioStore((state) => state.playClick);
   const readyPlayers = useGameStore((state) => state.game.readyPlayers);
   const playerID = useGameStore((state) => state.playerID);
 
@@ -28,6 +28,7 @@ const TugATapIntro = () => {
             Tap the{" "}
             <button
               onClick={() => {
+                Rune.actions.incrementTap();
                 playClick();
               }}
               className="stylized-shadow inline-block rounded-full transition-all active:translate-y-1 active:scale-90 active:shadow-none"
@@ -57,7 +58,7 @@ const TugATapIntro = () => {
           <li>
             If
             <img className="inline-block size-8" src={stickmanImage} />
-            is not moving, tap faster!
+            is not moving, tap WAY more!
           </li>
           <li>
             You have{" "}
@@ -90,8 +91,9 @@ const TugATapIntro = () => {
                 readyPlayers.includes(playerID) && "opacity-50",
               )}
               onClick={() => {
-                playClick();
+                playSelect();
                 Rune.actions.setPlayerReady();
+                Rune.actions.incrementTap();
               }}
               disabled={readyPlayers.includes(playerID)}
             >

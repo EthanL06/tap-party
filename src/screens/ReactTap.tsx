@@ -14,7 +14,8 @@ import { Shadow } from "../components/StickmanTug";
 import { useEffect } from "react";
 import { useAudioStore } from "../store/useAudioStore";
 import useSound from "use-sound";
-import clickSound from "../assets/click.mp3";
+import winSound from "../assets/sfx/react_lose.wav";
+import loseSound from "../assets/sfx/react_win.wav";
 
 const ReactTap = () => {
   const canReactionTap = useGameStore((state) => state.game.canReactionTap);
@@ -29,7 +30,10 @@ const ReactTap = () => {
   const winner = useGameStore((state) => state.game.winner);
 
   const stopLobbyMusic = useAudioStore((state) => state.stopLobbyMusic);
-  const [play] = useSound(clickSound);
+  const play = useAudioStore((state) => state.playClick);
+
+  const [playWin] = useSound(winSound);
+  const [playLose] = useSound(loseSound);
 
   useEffect(() => {
     stopLobbyMusic();
@@ -48,8 +52,10 @@ const ReactTap = () => {
     }
 
     if (roundWinners[roundWinners.length - 1] === playerID) {
+      playWin();
       return stickmanHappy;
     } else {
+      playLose();
       return stickmanSad;
     }
   };
@@ -108,6 +114,7 @@ const ReactTap = () => {
             if (hasRoundEnded) return;
 
             play();
+            Rune.actions.incrementTap();
             Rune.actions.reactTap();
           }}
           onTouchStart={() => {
@@ -299,16 +306,18 @@ const ReactionTimes = ({
         {determineMessage() || "Round Over"}
       </div>
 
-      <div className="max-w-84 mx-auto w-full text-center text-base font-bold">
-        {myReactionTime !== 0 ? (
-          <>
-            You reacted in {myReactionTime}
-            ms.
-          </>
-        ) : (
-          "You didn't react!"
-        )}
-      </div>
+      {myPlayerID != undefined && (
+        <div className="max-w-84 mx-auto w-full text-center text-base font-bold">
+          {myReactionTime !== 0 ? (
+            <>
+              You reacted in {myReactionTime}
+              ms.
+            </>
+          ) : (
+            "You didn't react!"
+          )}
+        </div>
+      )}
 
       {reactionTimes
         .filter(([playerID]) => playerID !== myPlayerID)

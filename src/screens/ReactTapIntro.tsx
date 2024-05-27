@@ -2,14 +2,13 @@ import Board from "../components/Board";
 import tapImage from "../assets/tap.svg";
 import StylizedButton from "../components/StylizedButton";
 import { useGameStore } from "../store/useGameStore";
-import clickSound from "../assets/click.mp3";
-import selectSound from "../assets/select.wav";
-import useSound from "use-sound";
 import { cn } from "../lib/utils";
+import { useAudioStore } from "../store/useAudioStore";
 
 const ReactTapIntro = () => {
-  const [playClick] = useSound(clickSound);
-  const [playSelect] = useSound(selectSound);
+  const playClick = useAudioStore((state) => state.playClick);
+  const playSelect = useAudioStore((state) => state.playSelect);
+
   const readyPlayers = useGameStore((state) => state.game.readyPlayers);
   const playerID = useGameStore((state) => state.playerID);
 
@@ -33,6 +32,7 @@ const ReactTapIntro = () => {
             After the{" "}
             <button
               onClick={() => {
+                Rune.actions.incrementTap();
                 playClick();
               }}
               className="stylized-shadow inline-block rounded-full transition-all active:translate-y-1 active:scale-90 active:shadow-none"
@@ -48,6 +48,7 @@ const ReactTapIntro = () => {
             You <span className="underline">lose</span> the round if you tap{" "}
             <button
               onClick={() => {
+                Rune.actions.incrementTap();
                 playClick();
               }}
               className="stylized-shadow inline-block rounded-full transition-all active:translate-y-1 active:scale-90 active:shadow-none"
@@ -97,6 +98,7 @@ const ReactTapIntro = () => {
               onClick={() => {
                 playSelect();
                 Rune.actions.setPlayerReady();
+                Rune.actions.incrementTap();
               }}
               disabled={readyPlayers.includes(playerID)}
             >

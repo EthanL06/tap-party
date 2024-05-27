@@ -1,4 +1,8 @@
-import type { PlayerId, RuneClient } from "rune-games-sdk";
+import type {
+  GameStateWithPersisted,
+  PlayerId,
+  RuneClient,
+} from "rune-games-sdk";
 import {
   COUNTDOWN_TIME,
   TUG_A_TAP_GAME_TIME,
@@ -7,6 +11,8 @@ import {
   TOTAL_REACT_TAP_ROUNDS,
   UPDATE_INTERVAL,
   TAP_RACE_GAME_TIME,
+  STEP_DISTANCE,
+  MAX_DISTANCE,
 } from "./lib/constants";
 
 export type Screen =
@@ -58,14 +64,20 @@ type GameActions = {
   castVote: (gameMode: GameMode) => void;
   clearReadyPlayers: () => void;
   click: () => void;
+  incrementTap: () => void;
   raceTap: () => void;
   reactTap: () => void;
   setPlayerReady: () => boolean;
-  setScreen: (screen: Screen) => void;
+};
+
+export type Persisted = {
+  taps: number;
+  wins: number;
+  totalGames: number;
 };
 
 declare global {
-  const Rune: RuneClient<GameState, GameActions>;
+  const Rune: RuneClient<GameState, GameActions, Persisted>;
 }
 
 // LOBBY RELATED FUNCTIONS
@@ -127,12 +139,27 @@ const determineGameMode = (game: GameState) => {
 // END OF LOBBY RELATED FUNCTIONS
 
 // REACT-TAP RELATED FUNCTIONS
-const newReactTapRound = (game: GameState) => {
+const newReactTapRound = (
+  game: GameStateWithPersisted<GameState, Persisted>,
+) => {
   if (game.gameOver) return;
 
   game.currentRound++;
 
   if (game.currentRound > TOTAL_REACT_TAP_ROUNDS) {
+    if (game.playerIds.length === 1) {
+      game.winner = game.playerIds[0];
+      game.gameOver = true;
+      Rune.gameOver({
+        players: {
+          [game.playerIds[0]]: "WON",
+        },
+        delayPopUp: true,
+      });
+      game.persisted[game.playerIds[0]].wins++;
+      return;
+    }
+
     const allPlayerIds = game.playerIds;
     const playerWins = allPlayerIds.reduce(
       (acc, playerId) => {
@@ -146,7 +173,7 @@ const newReactTapRound = (game: GameState) => {
 
     Rune.gameOver({
       players: playerWins,
-      minimizePopUp: true,
+      delayPopUp: true,
     });
 
     // If everyone has the same number of wins, it's a tie
@@ -169,6 +196,8 @@ const newReactTapRound = (game: GameState) => {
       },
       { playerId: "", wins: 0 },
     ).playerId;
+
+    game.persisted[game.winner].wins++;
 
     game.gameOver = true;
     game.hasRoundEnded = false;
@@ -237,63 +266,76 @@ const reactTapUpdate = (game: GameState) => {
 // END OF REACT-TAP RELATED FUNCTIONS
 
 Rune.initLogic({
-  minPlayers: 2,
+  minPlayers: 1,
   maxPlayers: 4,
-  setup: (allPlayerIds) => ({
-    screen: "lobby",
-    timer: LOBBY_TIME,
-    countdown: 0,
-    gameStart: false,
-    gameOver: false,
-    winner: null,
+  persistPlayerData: true,
+  setup: (allPlayerIds, { game }) => {
+    for (const playerId of allPlayerIds) {
+      game.persisted[playerId] = {
+        taps: game.persisted[playerId]?.taps || 0,
+        wins: game.persisted[playerId]?.wins || 0,
+        totalGames: game.persisted[playerId]?.totalGames || 0,
+      };
+    }
 
-    playerIds: allPlayerIds,
-    readyPlayers: [],
+    return {
+      screen: "lobby",
+      timer: LOBBY_TIME,
+      countdown: 0,
+      gameStart: false,
+      gameOver: false,
+      winner: null,
 
-    // Tug-a-tap related properties
-    clicks: allPlayerIds.reduce(
-      (acc, playerId) => {
-        acc[playerId] = 0;
-        return acc;
+      playerIds: allPlayerIds,
+      readyPlayers: [],
+
+      // Tug-a-tap related properties
+      clicks: allPlayerIds.reduce(
+        (acc, playerId) => {
+          acc[playerId] = 0;
+          return acc;
+        },
+        {} as GameState["clicks"],
+      ),
+
+      // Tap race related properties
+      playerDistances: allPlayerIds.reduce(
+        (acc, playerId) => {
+          acc[playerId] = 0;
+          return acc;
+        },
+        {} as GameState["playerDistances"],
+      ),
+
+      // React tap related properties
+      reactRoundsWins: [],
+      reactedPlayers: [],
+      reactionTimes: allPlayerIds.reduce(
+        (acc, playerId) => {
+          acc[playerId] = 0;
+          return acc;
+        },
+        {} as GameState["reactionTimes"],
+      ),
+      currentRound: 0,
+      roundTimeStart: 0,
+      canReactionTap: false,
+      timeBeforeTap: 0,
+      timeBetweenRounds: 0,
+      hasRoundEnded: false,
+
+      gameMode: null,
+      gameModeVotes: {
+        "tug-a-tap": [],
+        "tap-race": [],
+        "react-tap": [],
       },
-      {} as GameState["clicks"],
-    ),
-
-    // Tap race related properties
-    playerDistances: allPlayerIds.reduce(
-      (acc, playerId) => {
-        acc[playerId] = 0;
-        return acc;
-      },
-      {} as GameState["playerDistances"],
-    ),
-
-    // React tap related properties
-    reactRoundsWins: [],
-    reactedPlayers: [],
-    reactionTimes: allPlayerIds.reduce(
-      (acc, playerId) => {
-        acc[playerId] = 0;
-        return acc;
-      },
-      {} as GameState["reactionTimes"],
-    ),
-    currentRound: 0,
-    roundTimeStart: 0,
-    canReactionTap: false,
-    timeBeforeTap: 0,
-    timeBetweenRounds: 0,
-    hasRoundEnded: false,
-
-    gameMode: null,
-    gameModeVotes: {
-      "tug-a-tap": [],
-      "tap-race": [],
-      "react-tap": [],
-    },
-  }),
+    };
+  },
   actions: {
     castVote: (gameMode, { playerId, game }) => {
+      if (playerId === undefined) return;
+
       const gameModes = ["tug-a-tap", "tap-race", "react-tap"] as GameMode[];
 
       gameModes.forEach((mode) => {
@@ -325,25 +367,38 @@ Rune.initLogic({
       }
     },
 
-    clearReadyPlayers: (_, { game }) => {
+    clearReadyPlayers: (_, { game, playerId }) => {
+      if (playerId === undefined) return;
+
       game.readyPlayers = [];
     },
 
     click: (_, { game, playerId }) => {
+      if (playerId === undefined) return;
+
       game.clicks[playerId]++;
+      game.persisted[playerId].taps++;
+    },
+
+    incrementTap: (_, { game, playerId }) => {
+      if (playerId === undefined) return;
+
+      game.persisted[playerId].taps++;
     },
 
     raceTap: (_, { game, playerId }) => {
-      if (game.gameOver) return;
+      if (game.gameOver || playerId === undefined) return;
 
       console.log(`Player ${playerId} tapped!`);
 
+      game.persisted[playerId].taps++;
+
       const playerDistances = game.playerDistances;
-      const distance = playerDistances[playerId] + 1;
-      playerDistances[playerId] = Math.min(distance, 95);
+      const distance = playerDistances[playerId] + STEP_DISTANCE;
+      playerDistances[playerId] = Math.min(distance, MAX_DISTANCE);
       game.playerDistances = playerDistances;
 
-      if (distance >= 95) {
+      if (distance >= MAX_DISTANCE) {
         game.winner = playerId;
 
         game.gameOver = true;
@@ -363,8 +418,10 @@ Rune.initLogic({
             ...allPlayerIds,
           },
 
-          minimizePopUp: true,
+          delayPopUp: true,
         });
+
+        game.persisted[playerId].wins++;
       }
     },
 
@@ -372,7 +429,8 @@ Rune.initLogic({
       if (
         game.gameOver ||
         game.hasRoundEnded ||
-        game.reactedPlayers.includes(playerId)
+        game.reactedPlayers.includes(playerId) ||
+        playerId === undefined
       )
         return;
       const time = Rune.gameTime();
@@ -382,7 +440,10 @@ Rune.initLogic({
         game.reactionTimes[playerId] = -1;
 
         // If all but one player has reacted early, end the round
-        if (game.reactedPlayers.length === game.playerIds.length - 1) {
+        if (
+          game.reactedPlayers.length === game.playerIds.length - 1 ||
+          (game.reactedPlayers.length == 1 && game.playerIds.length === 1)
+        ) {
           game.reactRoundsWins.push(
             allPlayerIds.filter(
               (playerId) => game.reactionTimes[playerId] !== -1,
@@ -437,18 +498,22 @@ Rune.initLogic({
       }
     },
 
-    setPlayerReady: (_, { game, playerId }) => {
-      if (game.readyPlayers.includes(playerId)) return;
+    setPlayerReady: (_, { game, playerId, allPlayerIds }) => {
+      if (game.readyPlayers.includes(playerId) || playerId === undefined)
+        return;
       game.readyPlayers.push(playerId);
 
       if (game.readyPlayers.length === game.playerIds.length) {
+        if (game.screen === "lobby") return;
         console.log("All players ready, starting game...");
 
-        if (game.screen === "lobby") return;
-
         game.screen = game.gameMode as Screen;
-
         game.countdown = COUNTDOWN_TIME;
+
+        allPlayerIds.forEach((playerId) => {
+          game.persisted[playerId].totalGames++;
+        });
+
         switch (game.gameMode) {
           case "tug-a-tap": {
             game.timer = TUG_A_TAP_GAME_TIME;
@@ -460,10 +525,6 @@ Rune.initLogic({
           }
         }
       }
-    },
-
-    setScreen: (screen, { game }) => {
-      game.screen = screen;
     },
   },
   update: ({ game }) => {
@@ -505,6 +566,19 @@ Rune.initLogic({
         case "tug-a-tap": {
           game.gameOver = true;
 
+          if (game.playerIds.length === 1) {
+            game.winner = game.playerIds[0];
+            Rune.gameOver({
+              players: {
+                [game.playerIds[0]]: "WON",
+              },
+              delayPopUp: true,
+            });
+
+            game.persisted[game.playerIds[0]].wins++;
+            return;
+          }
+
           // Check if all players have the same number of clicks
           if (
             Object.values(game.clicks).every(
@@ -520,7 +594,7 @@ Rune.initLogic({
                 },
                 {} as Record<PlayerId, "TIE">,
               ),
-              minimizePopUp: true,
+              delayPopUp: true,
             });
             return;
           }
@@ -535,7 +609,7 @@ Rune.initLogic({
 
           Rune.gameOver({
             players,
-            minimizePopUp: true,
+            delayPopUp: true,
           });
 
           game.winner = Object.entries(players).reduce(
@@ -548,11 +622,27 @@ Rune.initLogic({
             },
             { playerId: "", clicks: 0 },
           ).playerId;
+
+          game.persisted[game.winner].wins++;
           break;
         }
 
         case "tap-race": {
           game.gameOver = true;
+
+          if (game.playerIds.length === 1) {
+            game.winner = game.playerIds[0];
+            Rune.gameOver({
+              players: {
+                [game.playerIds[0]]: "WON",
+              },
+              delayPopUp: true,
+            });
+
+            game.persisted[game.playerIds[0]].wins++;
+            return;
+          }
+
           // Find player with the highest distance
           const playerDistances = game.playerDistances;
           const maxDistance = Math.max(...Object.values(playerDistances));
@@ -573,12 +663,14 @@ Rune.initLogic({
 
           game.winner = winner;
 
+          game.persisted[winner].wins++;
+
           Rune.gameOver({
             players: {
               [winner]: "WON",
               ...losers,
             },
-            minimizePopUp: true,
+            delayPopUp: true,
           });
           break;
         }

@@ -12,13 +12,11 @@ import { useEffect, useRef, useState } from "react";
 import Timer from "../components/Timer";
 import Event from "../components/Event";
 import { useGameStore } from "../store/useGameStore";
-import useSound from "use-sound";
-import selectSound from "../assets/select.wav";
 import { PlayerId } from "rune-games-sdk";
 import { useAudioStore } from "../store/useAudioStore";
 
 const TapRace = () => {
-  const [play] = useSound(selectSound);
+  const play = useAudioStore((state) => state.playSelect);
   const stopLobbyMusic = useAudioStore((state) => state.stopLobbyMusic);
 
   const playerIDs = useGameStore((state) => state.game.playerIds);
@@ -43,7 +41,7 @@ const TapRace = () => {
       </div>
 
       <div className="mt-12 flex w-full grow flex-col justify-between gap-y-1  px-4">
-        <StickmanTrack playerID={playerID} />
+        {playerID != undefined && <StickmanTrack playerID={playerID} />}
 
         {otherPlayers.map((id) => (
           <StickmanTrack key={id} playerID={id} />
