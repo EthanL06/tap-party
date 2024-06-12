@@ -58,7 +58,7 @@ const TugATapIntro = () => {
           <li>
             If
             <img className="inline-block size-8" src={stickmanImage} />
-            is not moving, tap WAY more!
+            is not moving, tap FASTER!
           </li>
           <li>
             You have{" "}

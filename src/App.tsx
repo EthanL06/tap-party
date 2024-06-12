@@ -1,3 +1,4 @@
+import StopMusic from "./components/StopMusic";
 import { useInitClient } from "./hooks/useInitClient";
 import { Screen } from "./logic";
 import Lobby from "./screens/Lobby";
@@ -23,7 +24,12 @@ function App() {
   useInitClient();
   const screen = useGameStore((state) => state.game.screen);
 
-  return screens[screen];
+  return (
+    <>
+      {screens[screen]}
+      <StopMusic />
+    </>
+  );
 }
 
 export default App;

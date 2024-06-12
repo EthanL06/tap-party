@@ -28,24 +28,25 @@ const Ready = () => {
   const [render, setRender] = useState(true);
   const [showStats, setShowStats] = useState(false);
 
-  const [play] = useSound(selectSound);
-  const [playClick] = useSound(clickSound);
-  const [playWin] = useSound(winSound);
-  const [playLose] = useSound(loseSound);
+  const [play, { stop: stopSelect }] = useSound(selectSound);
+  const [playClick, { stop: stopClick }] = useSound(clickSound);
+  const [playWin, { stop: stopWin }] = useSound(winSound);
+  const [playLose, { stop: stopLose }] = useSound(loseSound);
 
-  const [playThree] = useSound(three);
-  const [playTwo] = useSound(two);
-  const [playOne] = useSound(one);
-  const [playGo] = useSound(go);
+  const [playThree, { stop: stopThree }] = useSound(three);
+  const [playTwo, { stop: stopTwo }] = useSound(two);
+  const [playOne, { stop: stopOne }] = useSound(one);
+  const [playGo, { stop: stopGo }] = useSound(go);
 
   const [playRace, { sound: raceSound, stop: stopRaceSound }] = useSound(race, {
     volume: 0.5,
     loop: true,
   });
 
-  const [playTugATap, { sound: tugATapSound }] = useSound(tugATap, {
-    volume: 0.5,
-  });
+  const [playTugATap, { sound: tugATapSound, stop: stopTugATapSound }] =
+    useSound(tugATap, {
+      volume: 0.5,
+    });
 
   const [playReactTap, { sound: reactTapSound, stop: stopReactTapSound }] =
     useSound(reactTap, {
@@ -63,9 +64,18 @@ const Ready = () => {
       playOne: playOne,
       playGo: playGo,
       playRace: playRace,
+      stopSelect: stopSelect,
+      stopClick: stopClick,
+      stopWin: stopWin,
+      stopLose: stopLose,
+      stopThree: stopThree,
+      stopTwo: stopTwo,
+      stopOne: stopOne,
+      stopGo: stopGo,
       raceSound: raceSound,
       stopRaceSound: stopRaceSound,
       playTugATap: playTugATap,
+      stopTugATapSound: stopTugATapSound,
       tugATapSound: tugATapSound,
       playReactTap: playReactTap,
       reactTapSound: reactTapSound,
@@ -85,8 +95,17 @@ const Ready = () => {
     playWin,
     raceSound,
     reactTapSound,
+    stopClick,
+    stopGo,
+    stopLose,
+    stopOne,
     stopRaceSound,
     stopReactTapSound,
+    stopSelect,
+    stopThree,
+    stopTugATapSound,
+    stopTwo,
+    stopWin,
     tugATapSound,
   ]);
 
@@ -98,6 +117,14 @@ const Ready = () => {
       }, 650);
     }
   }, [readyPlayers, totalPlayers]);
+
+  useEffect(() => {
+    console.log(readyPlayers, totalPlayers);
+    if (!render && readyPlayers.length < totalPlayers) {
+      setRender(true);
+      setFade(false);
+    }
+  }, [readyPlayers, render, totalPlayers]);
 
   if (!render) {
     return null;
